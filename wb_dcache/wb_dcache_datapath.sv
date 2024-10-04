@@ -18,6 +18,7 @@ module wb_dcache_datapath(
     input  wire                            clk,
     input  wire                            rst_n,
 
+    // Interface signals to/from cache controller
     input  wire                            cache_wr_i,
     input  wire                            cache_line_wr_i,
     input  wire                            cache_line_clean_i,
@@ -38,15 +39,7 @@ module wb_dcache_datapath(
     input  wire  [DCACHE_LINE_WIDTH-1:0]   mem2dcache_data_i,
     output logic [DCACHE_LINE_WIDTH-1:0]   dcache2mem_data_o,
     output logic [DCACHE_ADDR_WIDTH-1:0]   dcache2mem_addr_o
-
-    // Data cache to victim cache interface
-    input  wire                            wr_from_victim,
-    input  logic                           v_wr_en,
-    input  logic [DCACHE_LINE_WIDTH-1:0]   data_victim2cache  
-
-    output logic                           v_hit,
-    output logic [DCACHE_LINE_WIDTH-1:0]   data_cache2victim,
-    output logic [DCACHE_TAG_BITS-1:0]     v_tag
+  
 );
 
 
@@ -100,11 +93,11 @@ end
 
 always_comb begin
     unique case (addr_offset_ff) // MT
-        2'b00:    cache_word_read = cache_line_read[31:0];
-        2'b01:    cache_word_read = cache_line_read[63:32];
-        2'b10:    cache_word_read = cache_line_read[95:64];
-        2'b11:    cache_word_read = cache_line_read[127:96];
-        default:  cache_word_read = '0;
+      2'b00:    cache_word_read = cache_line_read[31:0];
+      2'b01:    cache_word_read = cache_line_read[63:32];
+      2'b10:    cache_word_read = cache_line_read[95:64];
+      2'b11:    cache_word_read = cache_line_read[127:96];
+      default:  cache_word_read = '0;
     endcase
 end
 
@@ -173,7 +166,7 @@ assign cache_wdata = cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_li
 assign cache_data_wr_sel = cache_line_wr_i ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
 
 always_ff@(posedge clk) begin
-    if(!rst_n) begin
+   if(!rst_n) begin
         dcache2lsummu_data_ff <= '0;
     end else begin
         dcache2lsummu_data_ff <= dcache2lsummu_data_next;
@@ -181,46 +174,36 @@ always_ff@(posedge clk) begin
 end
 
 always_ff@(posedge clk) begin
-    if(!rst_n) begin
-        addr_tag_ff    <= '0;
-        addr_index_ff  <= '0;
-    end else begin
-        addr_tag_ff    <= addr_tag;
-        addr_index_ff  <= lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
-    end
+  if(!rst_n) begin
+      addr_tag_ff    <= '0;
+      addr_index_ff  <= '0;
+  end else begin
+      addr_tag_ff    <= addr_tag;
+      addr_index_ff  <= lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
+  end
 end
 
 dcache_data_ram dcache_data_ram_module (
-    .clk                  (clk), 
-    .rst_n                (rst_n),
+  .clk                  (clk), 
+  .rst_n                (rst_n),
 
-    .req                  (lsummu2dcache_req_i),
-    .wr_en                (cache_data_wr_sel),
-    .addr                 (addr_index),
-    .wdata                (cache_wdata),
-    .rdata                (cache_line_read)  
+  .req                  (lsummu2dcache_req_i),
+  .wr_en                (cache_data_wr_sel),
+  .addr                 (addr_index),
+  .wdata                (cache_wdata),
+  .rdata                (cache_line_read)  
 );
 
 
 dcache_tag_ram dcache_tag_ram_module (
-    .clk                  (clk), 
-    .rst_n                (rst_n),
+  .clk                  (clk), 
+  .rst_n                (rst_n),
 
-    .req                  (lsummu2dcache_req_i),
-    .wr_en                (cache_tag_wr_sel),
-    .addr                 (addr_index),
-    .wdata                (cache_tag_write),
-    .rdata                (cache_tag_read)  
-);
-
-victim_dcache victim_dcache (
-    .clk(clk),
-    .rst(rst_n),
-    .v_tag(cache_tag_read),
-    .data_cache2victim(dcache2mem.w_data),
-    .v_wr_en(v_wr_en),
-    .v_hit(v_hit),
-    .data_victim2cache(data_victim2cache)
+  .req                  (lsummu2dcache_req_i),
+  .wr_en                (cache_tag_wr_sel),
+  .addr                 (addr_index),
+  .wdata                (cache_tag_write),
+  .rdata                (cache_tag_read)  
 );
 
 
@@ -232,8 +215,5 @@ assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid
 assign dcache2mem_addr_o    = dcache2mem_addr;
 assign dcache2mem_data_o    = cache_line_read;
 assign dcache2lsummu_data_o = dcache2lsummu_data_next;
-
-// cache to victim
-// assign data_cache2victim    = dcache2mem_data_o;
 
 endmodule
