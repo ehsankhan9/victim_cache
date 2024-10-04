@@ -41,6 +41,10 @@ module wb_dcache_controller (
     output logic                          dcache2mem_wr_o,
     output logic                          dcache2mem_kill_o,
     input wire                            dmem_sel_i
+
+    input  logic                          victim_hit,
+    output logic                          write_from_victim,
+    output logic                          write_to_victim
 );
          
 
@@ -117,59 +121,32 @@ always_comb begin
         end
 
 
-
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
-
-        VICTIM: begin 
-            write_to_victim = 0;                      
-            if (lsummu2dcache_wr_ff) begin
-                cache_wr      = 1'b1;
-                dcache_state_next = DCACHE_IDLE; 
-                dcache2lsummu_ack = 1'b1;  
-            end else begin
-                dcache2lsummu_ack = 1'b1;  
-                dcache_state_next = DCACHE_IDLE; 
-            end
-        end
-
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-
-
 
 
         DCACHE_PROCESS_REQ: begin  
-            // Process the cache data request  
+            write_from_victim = 0;
+            write_to_victim   = 0;
 
+            // Process the cache data request  
             if (dcache_hit) begin 
             // In case of hit, perform the cache read/write operation           
                 if (lsummu2dcache_wr_ff) begin
-                    cache_wr      = 1'b1;
+                    cache_wr          = 1'b1;
                     dcache_state_next = DCACHE_IDLE; 
                     dcache2lsummu_ack = 1'b1;  
                 end else begin
                     dcache2lsummu_ack = 1'b1;  
                     dcache_state_next = DCACHE_IDLE; 
                 end
-               
             end 
-
-
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
 
             else if (victim_hit) begin
                 write_from_victim = 1;
                 dcache_state_next = VICTIM;
             end
-
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
 
             else if (dcache_miss) begin           
                 if (dcache_evict) begin
@@ -177,30 +154,46 @@ always_comb begin
                     dcache2mem_req    = 1'b1;
                     dcache2mem_wr     = 1'b1;
                     cache_wrb_req     = 1'b1;
-                end else begin 
+
+                    write_to_victim   = 1'b1;
+                end 
+                else begin 
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
+
+                    write_to_victim   = 1'b1;  //////////////////////////////////////
+
                 end
             end           
         end
 
-        DCACHE_WRITE: begin
-             dcache_state_next = DCACHE_IDLE; 
-             dcache2lsummu_ack = 1'b1;  
+        VICTIM: begin 
+            write_from_victim = 0;                 
+            if (lsummu2dcache_wr_ff) begin
+                cache_wr          = 1'b1;
+                dcache_state_next = DCACHE_IDLE; 
+                dcache2lsummu_ack = 1'b1;  
+            end else begin
+                dcache2lsummu_ack = 1'b1;  
+                dcache_state_next = DCACHE_IDLE; 
+            end
         end
 
-        DCACHE_ALLOCATE: begin  
-            // Response from main memory is received          
+        DCACHE_ALLOCATE: begin        
+            write_to_victim = 0;           
+
             if (mem2dcache_ack_i) begin
                 dcache_state_next = DCACHE_PROCESS_REQ;
                 cache_line_wr     = 1'b1;
             end else begin
-               dcache_state_next = DCACHE_ALLOCATE;
-               dcache2mem_req    = 1'b1;
+               dcache_state_next  = DCACHE_ALLOCATE;
+               dcache2mem_req     = 1'b1;
             end
         end
+
         DCACHE_WRITE_BACK: begin  
-            // Response from main memory is received          
+            write_to_victim = 0;
+
             if (mem2dcache_ack_i) begin  
               //  dcache_state_next = DCACHE_ALLOCATE;
                 if (dcache_flush_i) begin
@@ -213,13 +206,26 @@ always_comb begin
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
                 end 
-            end else begin
+            end 
+            else begin
                 dcache_state_next = DCACHE_WRITE_BACK;
                 dcache2mem_req    = 1'b1;
                 dcache2mem_wr     = 1'b1;
                 cache_wrb_req     = 1'b1;
             end
         end
+
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+        DCACHE_WRITE: begin
+             dcache_state_next = DCACHE_IDLE; 
+             dcache2lsummu_ack = 1'b1;  
+        end
+        
         DCACHE_FLUSH_NEXT: begin  
             // Ack from cache, data is written simultaneously          
             dcache_state_next = DCACHE_FLUSH;     
