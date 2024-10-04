@@ -51,59 +51,59 @@ assign mem2dcache    = mem2dcache_i;
 
 
 wb_dcache_controller wb_dcache_controller_module(
-    .clk                     (clk), 
-    .rst_n                   (rst_n),
+  .clk                     (clk), 
+  .rst_n                   (rst_n),
 
-     // Interface signals for cache datapath
-    .cache_hit_i             (cache_hit),
-    .cache_evict_req_i       (cache_evict_req),
-    .evict_index_o           (evict_index), 
-    .cache_wr_o              (cache_wr),
-    .cache_line_wr_o         (cache_line_wr),
-    .cache_line_clean_o      (cache_line_clean),
-    .cache_wrb_req_o         (cache_wrb_req),
+   // Interface signals for cache datapath
+  .cache_hit_i             (cache_hit),
+  .cache_evict_req_i       (cache_evict_req),
+  .evict_index_o           (evict_index), 
+  .cache_wr_o              (cache_wr),
+  .cache_line_wr_o         (cache_line_wr),
+  .cache_line_clean_o      (cache_line_clean),
+  .cache_wrb_req_o         (cache_wrb_req),
 
-    // LSU/MMU <---> data cache signals
-    .lsummu2dcache_req_i     (lsummu2dcache.req),
-    .lsummu2dcache_wr_i      (lsummu2dcache.w_en),
-    .dcache2lsummu_ack_o     (dcache2lsummu.ack),
-    .dcache_flush_i          (dcache_flush_i),
-    .dcache_kill_i           (dcache_kill_i),
-//    .dcache_flush_ack_o      (dcache2lsummu.flush_ack),    
+  // LSU/MMU <---> data cache signals
+  .lsummu2dcache_req_i     (lsummu2dcache.req),
+  .lsummu2dcache_wr_i      (lsummu2dcache.w_en),
+  .dcache2lsummu_ack_o     (dcache2lsummu.ack),
+  .dcache_flush_i          (dcache_flush_i),
+  .dcache_kill_i           (dcache_kill_i),
+//  .dcache_flush_ack_o      (dcache2lsummu.flush_ack),    
 
-    // Data memory <---> data cache signals
-    .mem2dcache_ack_i        (mem2dcache.ack),
-    .dcache2mem_req_o        (dcache2mem.req),
-    .dcache2mem_wr_o         (dcache2mem.w_en),
-    .dcache2mem_kill_o       (dcache2mem_kill_o),
-    .dmem_sel_i              (dmem_sel_i)
+  // Data memory <---> data cache signals
+  .mem2dcache_ack_i        (mem2dcache.ack),
+  .dcache2mem_req_o        (dcache2mem.req),
+  .dcache2mem_wr_o         (dcache2mem.w_en),
+  .dcache2mem_kill_o       (dcache2mem_kill_o),
+  .dmem_sel_i              (dmem_sel_i)
 );  
 
 wb_dcache_datapath wb_dcache_datapath_module(
-    .clk                     (clk),
-    .rst_n                   (rst_n),
-    
-    // Interface signals for cache datapath
-    .cache_wr_i              (cache_wr),
-    .cache_line_wr_i         (cache_line_wr),
-    .cache_line_clean_i      (cache_line_clean),
-    .cache_wrb_req_i         (cache_wrb_req), 
-    .evict_index_i           (evict_index),   
-    .cache_hit_o             (cache_hit),
-    .cache_evict_req_o       (cache_evict_req),
-    
-    // LSU/MMU <---> data cache signals
-    .dcache_flush_i          (dcache_flush_i),
-    .lsummu2dcache_req_i     (lsummu2dcache.req),
-    .lsummu2dcache_addr_i    (lsummu2dcache.addr),
-    .lsummu2dcache_wdata_i   (lsummu2dcache.w_data),
-    .sel_byte_i              (lsummu2dcache.sel_byte),
-    .dcache2lsummu_data_o    (dcache2lsummu.r_data),
-    
-    // Data memory <---> data cache signals
-    .mem2dcache_data_i       (mem2dcache.r_data),
-    .dcache2mem_data_o       (dcache2mem.w_data),
-    .dcache2mem_addr_o       (dcache2mem.addr)
+  .clk                     (clk),
+  .rst_n                   (rst_n),
+
+  // Interface signals for cache datapath
+  .cache_wr_i              (cache_wr),
+  .cache_line_wr_i         (cache_line_wr),
+  .cache_line_clean_i      (cache_line_clean),
+  .cache_wrb_req_i         (cache_wrb_req), 
+  .evict_index_i           (evict_index),   
+  .cache_hit_o             (cache_hit),
+  .cache_evict_req_o       (cache_evict_req),
+
+  // LSU/MMU <---> data cache signals
+  .dcache_flush_i          (dcache_flush_i),
+  .lsummu2dcache_req_i     (lsummu2dcache.req),
+  .lsummu2dcache_addr_i    (lsummu2dcache.addr),
+  .lsummu2dcache_wdata_i   (lsummu2dcache.w_data),
+  .sel_byte_i              (lsummu2dcache.sel_byte),
+  .dcache2lsummu_data_o    (dcache2lsummu.r_data),
+  
+  // Data memory <---> data cache signals
+  .mem2dcache_data_i       (mem2dcache.r_data),
+  .dcache2mem_data_o       (dcache2mem.w_data),
+  .dcache2mem_addr_o       (dcache2mem.addr)
 );
 
 
