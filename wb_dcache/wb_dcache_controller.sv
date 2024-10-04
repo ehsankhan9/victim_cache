@@ -161,14 +161,14 @@ always_comb begin
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
 
-                    write_to_victim   = 1'b1;  //////////////////////////////////////
-
+                    write_to_victim   = 1'b1;  
                 end
             end           
         end
 
         VICTIM: begin 
-            write_from_victim = 0;                 
+            write_from_victim = 0; 
+                            
             if (lsummu2dcache_wr_ff) begin
                 cache_wr          = 1'b1;
                 dcache_state_next = DCACHE_IDLE; 
