@@ -115,12 +115,37 @@ always_comb begin
                 evict_index_next  = '0;
             end
         end
+
+
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+        VICTIM: begin 
+            write_to_victim = 0;                      
+            if (lsummu2dcache_wr_ff) begin
+                cache_wr      = 1'b1;
+                dcache_state_next = DCACHE_IDLE; 
+                dcache2lsummu_ack = 1'b1;  
+            end else begin
+                dcache2lsummu_ack = 1'b1;  
+                dcache_state_next = DCACHE_IDLE; 
+            end
+        end
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+
+
+
         DCACHE_PROCESS_REQ: begin  
             // Process the cache data request  
 
             if (dcache_hit) begin 
-            // In case of hit, perform the cache read/write operation   
-                       
+            // In case of hit, perform the cache read/write operation           
                 if (lsummu2dcache_wr_ff) begin
                     cache_wr      = 1'b1;
                     dcache_state_next = DCACHE_IDLE; 
@@ -130,8 +155,24 @@ always_comb begin
                     dcache_state_next = DCACHE_IDLE; 
                 end
                
-            end else if (dcache_miss) begin           
-               if (dcache_evict) begin
+            end 
+
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+            else if (victim_hit) begin
+                write_from_victim = 1;
+                dcache_state_next = VICTIM;
+            end
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+            else if (dcache_miss) begin           
+                if (dcache_evict) begin
                     dcache_state_next = DCACHE_WRITE_BACK;
                     dcache2mem_req    = 1'b1;
                     dcache2mem_wr     = 1'b1;
@@ -142,6 +183,7 @@ always_comb begin
                 end
             end           
         end
+
         DCACHE_WRITE: begin
              dcache_state_next = DCACHE_IDLE; 
              dcache2lsummu_ack = 1'b1;  
