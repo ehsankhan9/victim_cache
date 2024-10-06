@@ -6,8 +6,8 @@ module victim_cache (
     input logic [TAG_WIDTH-1  : 0]  cache_to_victim_tag,   //incomming_tag
     input logic                     write_to_victim,
 
-    output logic [DATA_WIDTH-1 : 0] victim_to_cache_data   ,//outgoing_data
-    output logic [TAG_WIDTH-1  : 0] victim_to_cache_tag    ,//out_going_tag
+    output logic [DATA_WIDTH-1 : 0] victim_to_cache_data,  //outgoing_data
+    output logic [TAG_WIDTH-1  : 0] victim_to_cache_tag ,  //out_going_tag
     output logic                    victim_hit,
 );
 
