@@ -42,6 +42,7 @@ module wb_dcache_controller (
     output logic                          dcache2mem_kill_o,
     input wire                            dmem_sel_i
 
+    //victim cache to/from dcache
     input  logic                          victim_hit,
     output logic                          write_from_victim,
     output logic                          write_to_victim
@@ -106,6 +107,8 @@ always_comb begin
     cache_line_clean  = 1'b0;
     cache_wr          = 1'b0;
     dcache2mem_kill   = 1'b0;
+    write_from_victim = 0;
+    write_to_victim   = 0;
     
     unique case (dcache_state_ff)
         DCACHE_IDLE: begin
@@ -127,8 +130,6 @@ always_comb begin
 
 
         DCACHE_PROCESS_REQ: begin  
-            write_from_victim = 0;
-            write_to_victim   = 0;
 
             // Process the cache data request  
             if (dcache_hit) begin 
@@ -167,7 +168,6 @@ always_comb begin
         end
 
         VICTIM: begin 
-            write_from_victim = 0; 
                             
             if (lsummu2dcache_wr_ff) begin
                 cache_wr          = 1'b1;
@@ -179,8 +179,7 @@ always_comb begin
             end
         end
 
-        DCACHE_ALLOCATE: begin        
-            write_to_victim = 0;           
+        DCACHE_ALLOCATE: begin             
 
             if (mem2dcache_ack_i) begin
                 dcache_state_next = DCACHE_PROCESS_REQ;
@@ -192,7 +191,6 @@ always_comb begin
         end
 
         DCACHE_WRITE_BACK: begin  
-            write_to_victim = 0;
 
             if (mem2dcache_ack_i) begin  
               //  dcache_state_next = DCACHE_ALLOCATE;
