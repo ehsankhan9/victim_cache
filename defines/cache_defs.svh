@@ -71,6 +71,7 @@ parameter DCACHE_ADDR_WIDTH  = `XLEN;
 parameter DCACHE_DATA_WIDTH  = `XLEN;
 parameter DCACHE_LINE_WIDTH  = 128;            // Line width is in bits
 parameter DCACHE_NO_OF_SETS  = `DCACHE_SETS; // 2048;
+parameter VICTIM_NO_OF_SETS  =  4;           //for victim cache
 
 parameter DCACHE_OFFSET_BITS = $clog2(DCACHE_LINE_WIDTH/8);
 parameter DCACHE_IDX_BITS    = $clog2(DCACHE_NO_OF_SETS); 

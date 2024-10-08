@@ -64,7 +64,7 @@ logic [DCACHE_IDX_BITS-1:0]          addr_index, addr_index_ff;
 logic [DCACHE_IDX_BITS-1:0]          evict_index;
 logic                                dcache_flush;                               
 logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
-logic [XLEN-1:0]                     victim2cache_tag;
+logic [DCACHE_TAG_BITS-1:0]          victim2cache_tag;      //8 bits
 
 assign dcache_flush         = dcache_flush_i;
 assign evict_index          = evict_index_i;
@@ -159,7 +159,7 @@ cache_tag_wr_sel = '0;
     
     end else if (write_from_victim) begin
 
-        cache_tag_write.tag   = ;//////////////////////////////////////// write tag leave from victim
+        cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_tag};
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
@@ -228,12 +228,12 @@ dcache_tag_ram dcache_tag_ram_module (
 );
 
 victim_cache victim_cache_module (
-  .cache_to_victim_data(cache_line_read),
-  .cache_to_victim_tag(cache_tag_read),
-  .write_to_victim(write_to_victim),
-  .victim_to_cache_data(victim2cache_data),
-  .victim_to_cache_tag(victim2cache_tag),
-  .victim_hit(victim_hit)
+  .cache_to_victim_data     (cache_line_read),
+  .cache_to_victim_tag      (cache_tag_read.tag[DCACHE_TAG_BITS-1:0]),
+  .write_to_victim          (write_to_victim),
+  .victim_to_cache_data     (victim2cache_data),
+  .victim_to_cache_tag      (victim2cache_tag),
+  .victim_hit               (victim_hit)
 );
 
 // Output signals update
