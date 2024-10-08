@@ -107,8 +107,8 @@ always_comb begin
     cache_line_clean  = 1'b0;
     cache_wr          = 1'b0;
     dcache2mem_kill   = 1'b0;
-    write_from_victim = 0;
-    write_to_victim   = 0;
+    write_from_victim = '0;
+    write_to_victim   = '0;
     
     unique case (dcache_state_ff)
         DCACHE_IDLE: begin

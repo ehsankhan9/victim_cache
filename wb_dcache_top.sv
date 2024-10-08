@@ -46,6 +46,11 @@ type_dcache2lsummu_s               dcache2lsummu;
 type_mem2dcache_s                  mem2dcache;
 type_dcache2mem_s                  dcache2mem;
 
+//victim cache signals
+logic                             victim_hit;
+logic                             write_from_victim;
+logic                             write_to_victim;
+
 assign lsummu2dcache = lsummu2dcache_i;
 assign mem2dcache    = mem2dcache_i;
 
@@ -76,7 +81,12 @@ wb_dcache_controller wb_dcache_controller_module(
   .dcache2mem_req_o        (dcache2mem.req),
   .dcache2mem_wr_o         (dcache2mem.w_en),
   .dcache2mem_kill_o       (dcache2mem_kill_o),
-  .dmem_sel_i              (dmem_sel_i)
+  .dmem_sel_i              (dmem_sel_i),
+
+  //victim cache to/from dcache
+  .victim_hit              (victim_hit),
+  .write_from_victim       (write_from_victim),
+  .write_to_victim         (write_to_victim)
 );  
 
 wb_dcache_datapath wb_dcache_datapath_module(
@@ -103,7 +113,12 @@ wb_dcache_datapath wb_dcache_datapath_module(
   // Data memory <---> data cache signals
   .mem2dcache_data_i       (mem2dcache.r_data),
   .dcache2mem_data_o       (dcache2mem.w_data),
-  .dcache2mem_addr_o       (dcache2mem.addr)
+  .dcache2mem_addr_o       (dcache2mem.addr),
+
+  //victim cache to/from dcache
+  .victim_hit              (victim_hit),
+  .write_from_victim       (write_from_victim),
+  .write_to_victim         (write_to_victim)
 );
 
 

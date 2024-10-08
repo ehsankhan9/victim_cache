@@ -39,7 +39,11 @@ module wb_dcache_datapath(
     input  wire  [DCACHE_LINE_WIDTH-1:0]   mem2dcache_data_i,
     output logic [DCACHE_LINE_WIDTH-1:0]   dcache2mem_data_o,
     output logic [DCACHE_ADDR_WIDTH-1:0]   dcache2mem_addr_o
-  
+
+    //victim cache to/from dcache
+    output logic                           victim_hit,      
+    input logic                            write_from_victim,
+    input logic                            write_to_victim  
 );
 
 
@@ -61,7 +65,6 @@ logic [DCACHE_IDX_BITS-1:0]          evict_index;
 logic                                dcache_flush;                               
 logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
 logic [XLEN-1:0]                     victim2cache_tag;
-logic                                victim_hit;
 
 assign dcache_flush         = dcache_flush_i;
 assign evict_index          = evict_index_i;
@@ -93,9 +96,6 @@ always_ff@(posedge clk) begin
 end
 
 //assign cache_line_read = cache_data_ram[addr_index]; // MT
-
-always_comb begin
-    unique case (addr_offset_ff) // MT
 
 always_comb begin
     unique case (addr_offset_ff) // MT
@@ -155,7 +155,18 @@ cache_tag_wr_sel = '0;
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    end else if (write_from_victim) begin
+
+        cache_tag_write.tag   = ;//////////////////////////////////////// write tag leave from victim
+        cache_tag_write.valid = 1'b1;
+        cache_tag_write.dirty = 8'b0;
+        cache_tag_wr_sel      = 4'hF;
     end
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 end
 
 // Prepare address and data signals for cache-line writeback or allocate on cache miss 
@@ -167,9 +178,13 @@ always_comb begin
     end
 end
  
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MT
-assign cache_wdata = cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_line_write : '0;
-assign cache_data_wr_sel = cache_line_wr_i ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
+assign cache_wdata = write_from_victim ? victim2cache_data : cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_line_write : '0;
+assign cache_data_wr_sel = ( write_from_victim || cache_line_wr_i) ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 always_ff@(posedge clk) begin
    if(!rst_n) begin
@@ -208,19 +223,18 @@ dcache_tag_ram dcache_tag_ram_module (
   .req                  (lsummu2dcache_req_i),
   .wr_en                (cache_tag_wr_sel),
   .addr                 (addr_index),
+  .wdata                (cache_tag_write),
+  .rdata                (cache_tag_read)  
+);
 
-victim_cache (
+victim_cache victim_cache_module (
   .cache_to_victim_data(cache_line_read),
   .cache_to_victim_tag(cache_tag_read),
-  .write_to_victim(cache_wrb_req_i),
+  .write_to_victim(write_to_victim),
   .victim_to_cache_data(victim2cache_data),
   .victim_to_cache_tag(victim2cache_tag),
   .victim_hit(victim_hit)
 );
-
-always_comb begin
-    if (victim_hit) begin
-
 
 // Output signals update
 assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 
