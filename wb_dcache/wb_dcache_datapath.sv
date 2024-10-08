@@ -59,6 +59,9 @@ logic [1:0]                          addr_offset, addr_offset_ff;
 logic [DCACHE_IDX_BITS-1:0]          addr_index, addr_index_ff;
 logic [DCACHE_IDX_BITS-1:0]          evict_index;
 logic                                dcache_flush;                               
+logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
+logic [XLEN-1:0]                     victim2cache_tag;
+logic                                victim_hit;
 
 assign dcache_flush         = dcache_flush_i;
 assign evict_index          = evict_index_i;
@@ -90,6 +93,9 @@ always_ff@(posedge clk) begin
 end
 
 //assign cache_line_read = cache_data_ram[addr_index]; // MT
+
+always_comb begin
+    unique case (addr_offset_ff) // MT
 
 always_comb begin
     unique case (addr_offset_ff) // MT
@@ -202,9 +208,18 @@ dcache_tag_ram dcache_tag_ram_module (
   .req                  (lsummu2dcache_req_i),
   .wr_en                (cache_tag_wr_sel),
   .addr                 (addr_index),
-  .wdata                (cache_tag_write),
-  .rdata                (cache_tag_read)  
+
+victim_cache (
+  .cache_to_victim_data(cache_line_read),
+  .cache_to_victim_tag(cache_tag_read),
+  .write_to_victim(cache_wrb_req_i),
+  .victim_to_cache_data(victim2cache_data),
+  .victim_to_cache_tag(victim2cache_tag),
+  .victim_hit(victim_hit)
 );
+
+always_comb begin
+    if (victim_hit) begin
 
 
 // Output signals update
