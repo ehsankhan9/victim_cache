@@ -16,20 +16,18 @@
 
 module victim_cache (
     input logic [DCACHE_LINE_WIDTH-1 : 0]  cache_to_victim_data,  //incomming_data
-    input logic [DCACHE_TAG_BITS-1  : 0]  cache_to_victim_tag,   //incomming_tag (original tag is 
-                                                // of 8 bit which is 0's extend with valid aad dirty
-    
-    input logic                     write_to_victim,
+    input logic [DCACHE_TAG_BITS-1  : 0]   cache_to_victim_tag,   //incomming_tag (original tag is of 8 bit which is 0's extend with valid aad dirty
+    input logic                            write_to_victim,
 
     output logic [DCACHE_LINE_WIDTH-1 : 0] victim_to_cache_data,  //outgoing_data
-    output logic [DCACHE_TAG_BITS-1  : 0] victim_to_cache_tag ,  //out_going_tag
-    output logic                    victim_hit,
+    output logic [DCACHE_TAG_BITS-1  : 0]  victim_to_cache_tag ,  //out_going_tag
+    output logic                           victim_hit
 );
 
 //////////////    VICTIM_CACHE      ///////////////     
 ////////////// VICTIM_NO_OF_SETS = 4  ////////////
-logic [DCACHE_LINE_WIDTH-1 : 0]  victim_cache_data  [VICTIM_NO_OF_SETS-1:0];
-logic [DCACHE_TAG_BITS-1  : 0]  victim_cache_tag    [VICTIM_NO_OF_SETS-1:0];
+logic [DCACHE_LINE_WIDTH-1 : 0] victim_cache_data  [VICTIM_NO_OF_SETS-1:0];
+logic [DCACHE_TAG_BITS-1  : 0]  victim_cache_tag   [VICTIM_NO_OF_SETS-1:0];
 ///////////////////////////////////////////////////
 
 logic [3:0] write_counter;
@@ -43,7 +41,7 @@ always_comb begin
     end 
     else if (cache_to_victim_tag == victim_cache_tag[1]) begin
         victim_to_cache_data = victim_cache_data[1];
-        victim_to_cache_tag  = victim_cache_tag[1]
+        victim_to_cache_tag  = victim_cache_tag[1];
         victim_hit = 1;
     end
     else if (cache_to_victim_tag == victim_cache_tag[2]) begin
@@ -64,14 +62,7 @@ end
 always_ff @(posedge clk or negedge rst) begin 
     if (!rst) begin
         write_counter <= 2'b00;
-        // victim_cache_tag <= '{default : '0};  Also done by this 
-        //                                      in place of generate block
-        genvar j;
-        generate
-        for (j=0; j<4; j++) begin
-            victim_cache_tag[i] = 0;    
-        end
-        endgenerate
+        victim_cache_tag <= '{default : '0};  // Also done by this in place of generate block
     end
     else if (write_to_victim) begin
         victim_cache_data[write_counter] <= cache_to_victim_data;

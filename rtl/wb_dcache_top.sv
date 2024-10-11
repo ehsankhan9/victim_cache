@@ -47,13 +47,13 @@ type_mem2dcache_s                  mem2dcache;
 type_dcache2mem_s                  dcache2mem;
 
 //victim cache signals
+logic                             dcache_valid;
 logic                             victim_hit;
 logic                             write_from_victim;
 logic                             write_to_victim;
 
 assign lsummu2dcache = lsummu2dcache_i;
 assign mem2dcache    = mem2dcache_i;
-
 
 wb_dcache_controller wb_dcache_controller_module(
   .clk                     (clk), 
@@ -86,7 +86,8 @@ wb_dcache_controller wb_dcache_controller_module(
   //victim cache to/from dcache
   .victim_hit              (victim_hit),
   .write_from_victim       (write_from_victim),
-  .write_to_victim         (write_to_victim)
+  .write_to_victim         (write_to_victim),
+  .dcache_valid_i          (dcache_valid)
 );  
 
 wb_dcache_datapath wb_dcache_datapath_module(
@@ -118,7 +119,8 @@ wb_dcache_datapath wb_dcache_datapath_module(
   //victim cache to/from dcache
   .victim_hit              (victim_hit),
   .write_from_victim       (write_from_victim),
-  .write_to_victim         (write_to_victim)
+  .write_to_victim         (write_to_victim),
+  .dcache_valid_o          (dcache_valid)
 );
 
 

@@ -14,6 +14,7 @@
 `include "cache_defs.svh"
 `endif
 
+
 module wb_dcache_datapath(
     input  wire                            clk,
     input  wire                            rst_n,
@@ -38,7 +39,7 @@ module wb_dcache_datapath(
     // Data cache to data memory interface
     input  wire  [DCACHE_LINE_WIDTH-1:0]   mem2dcache_data_i,
     output logic [DCACHE_LINE_WIDTH-1:0]   dcache2mem_data_o,
-    output logic [DCACHE_ADDR_WIDTH-1:0]   dcache2mem_addr_o
+    output logic [DCACHE_ADDR_WIDTH-1:0]   dcache2mem_addr_o,
 
     //victim cache to/from dcache
     output logic                           victim_hit,      
@@ -61,7 +62,8 @@ logic [DCACHE_TAG_BITS-1:0]          addr_tag, addr_tag_ff;
 logic [1:0]                          addr_offset, addr_offset_ff;
 logic [DCACHE_IDX_BITS-1:0]          addr_index, addr_index_ff;
 logic [DCACHE_IDX_BITS-1:0]          evict_index;
-logic                                dcache_flush;                               
+logic                                dcache_flush;   
+                            
 logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
 logic [DCACHE_TAG_BITS-1:0]          victim2cache_tag;      //8 bits
 
@@ -229,6 +231,8 @@ dcache_tag_ram dcache_tag_ram_module (
  //////////////////////////////////////////////////////////////////////////
  //888888888888888888888888888888888888888888888888888888888888888888888888   
 victim_cache victim_cache_module (
+  .clk                      (clk),
+  .rst                      (rst_n),
   .cache_to_victim_data     (cache_line_read),
   .cache_to_victim_tag      (cache_tag_read.tag[DCACHE_TAG_BITS-1:0]),
   .write_to_victim          (write_to_victim),
@@ -248,5 +252,8 @@ assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid
 assign dcache2mem_addr_o    = dcache2mem_addr;
 assign dcache2mem_data_o    = cache_line_read;
 assign dcache2lsummu_data_o = dcache2lsummu_data_next;
+
+//goes to controller for control victim cache
+assign dcache_valid_o = cache_tag_read.valid;
 
 endmodule
