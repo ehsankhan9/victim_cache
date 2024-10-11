@@ -13,21 +13,21 @@
 `include "cache_defs.svh"
 `endif
 
-module dcache_tag_ram
-#(
+module dcache_tag_ram #(
+
 parameter NUM_COL    = 4,
 parameter COL_WIDTH  = 8,
 parameter ADDR_WIDTH = $clog2(DCACHE_NO_OF_SETS), // 10, 
 parameter DATA_WIDTH = NUM_COL*COL_WIDTH          // Data Width in bits
-) (
-  input wire                     clk,
-  input wire                     rst_n,
-
-  input wire                     req,
-  input wire   [NUM_COL-1:0]     wr_en, 
-  input wire   [ADDR_WIDTH-1:0]  addr,
-  input wire   [DATA_WIDTH-1:0]  wdata,
-  output logic [DATA_WIDTH-1:0]  rdata
+)(
+    input wire                     clk,
+    input wire                     rst_n,
+    
+    input wire                     req,
+    input wire   [NUM_COL-1:0]     wr_en, 
+    input wire   [ADDR_WIDTH-1:0]  addr,
+    input wire   [DATA_WIDTH-1:0]  wdata,
+    output logic [DATA_WIDTH-1:0]  rdata
 );
 
 

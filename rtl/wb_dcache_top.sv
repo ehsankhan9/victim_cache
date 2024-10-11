@@ -123,9 +123,7 @@ wb_dcache_datapath wb_dcache_datapath_module(
   .dcache_valid_o          (dcache_valid)
 );
 
-
 assign dcache2lsummu_o = dcache2lsummu;
 assign dcache2mem_o    = dcache2mem;
-
 
 endmodule

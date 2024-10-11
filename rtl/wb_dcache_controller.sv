@@ -15,6 +15,7 @@
 `include "cache_defs.svh"
 `endif
 
+
 module wb_dcache_controller (
     input wire                            clk, 
     input wire                            rst_n,
@@ -43,6 +44,7 @@ module wb_dcache_controller (
     input wire                            dmem_sel_i
 
     //victim cache to/from dcache
+    input  logic                          dcache_valid_i,
     input  logic                          victim_hit,
     output logic                          write_from_victim,
     output logic                          write_to_victim
@@ -142,25 +144,39 @@ always_comb begin
                 end
             end 
 
-            else if (victim_hit) begin
-                write_from_victim = 1;
-                dcache_state_next = DCACHE_VICTIM;
+            else if (dcache_miss && victim_hit) begin
+                if (lsummu2dcache_wr_ff) begin
+                    write_from_victim = 1;
+                    dcache_state_next = DCACHE_VICTIM;                
+                end
+                else (!lsummu2dcache_wr_ff) begin
+                    write_from_victim = 0;
+                    dcache_state_next = DCACHE_IDLE;                
+                end
             end
 
-            else if (dcache_miss) begin           
+            else if (dcache_miss && !victim_hit) begin           
                 if (dcache_evict) begin
+                    if (dcache_valid_i) begin
+                        write_to_victim   = 1'b1;
+                    end
+                    else begin
+                        write_to_victim   = 1'b0;
+                    end
                     dcache_state_next = DCACHE_WRITE_BACK;
                     dcache2mem_req    = 1'b1;
                     dcache2mem_wr     = 1'b1;
                     cache_wrb_req     = 1'b1;
-
-                    write_to_victim   = 1'b1;
                 end 
                 else begin 
+                    if (dcache_valid_i) begin
+                        write_to_victim   = 1'b1;
+                    end
+                    else begin
+                        write_to_victim   = 1'b0;
+                    end
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
-
-                    write_to_victim   = 1'b1;  
                 end
             end           
         end

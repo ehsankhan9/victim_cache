@@ -97,17 +97,19 @@ always_ff@(posedge clk) begin
 end
 
 //assign cache_line_read = cache_data_ram[addr_index]; // MT
-
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 always_comb begin
     unique case (addr_offset_ff) // MT
       2'b00:    cache_word_read = cache_line_read[31:0];
       2'b01:    cache_word_read = cache_line_read[63:32];
       2'b10:    cache_word_read = cache_line_read[95:64];
       2'b11:    cache_word_read = cache_line_read[127:96];
-      default:  cache_word_read = '0;
+    default:  cache_word_read = '0;
     endcase
 end
-
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 always_comb begin
     cache_word_write = '0;  // MT cache_word_read      
         if (sel_byte[0]) cache_word_write[7:0]   = lsummu2dcache_wdata[7:0]; 
@@ -197,48 +199,48 @@ always_ff@(posedge clk) begin
 end
 
 always_ff@(posedge clk) begin
-  if(!rst_n) begin
-      addr_tag_ff    <= '0;
-      addr_index_ff  <= '0;
-  end else begin
-      addr_tag_ff    <= addr_tag;
-      addr_index_ff  <= lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
-  end
+    if(!rst_n) begin
+        addr_tag_ff    <= '0;
+        addr_index_ff  <= '0;
+    end else begin
+        addr_tag_ff    <= addr_tag;
+        addr_index_ff  <= lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
+    end
 end
 
 dcache_data_ram dcache_data_ram_module (
-  .clk                  (clk), 
-  .rst_n                (rst_n),
+    .clk                  (clk), 
+    .rst_n                (rst_n),
 
-  .req                  (lsummu2dcache_req_i),
-  .wr_en                (cache_data_wr_sel),
-  .addr                 (addr_index),
-  .wdata                (cache_wdata),
-  .rdata                (cache_line_read)  
+    .req                  (lsummu2dcache_req_i),
+    .wr_en                (cache_data_wr_sel),
+    .addr                 (addr_index),
+    .wdata                (cache_wdata),
+    .rdata                (cache_line_read)  
 );
 
 dcache_tag_ram dcache_tag_ram_module (
-  .clk                  (clk), 
-  .rst_n                (rst_n),
+    .clk                  (clk), 
+    .rst_n                (rst_n),
 
-  .req                  (lsummu2dcache_req_i),
-  .wr_en                (cache_tag_wr_sel),
-  .addr                 (addr_index),
-  .wdata                (cache_tag_write),
-  .rdata                (cache_tag_read)  
+    .req                  (lsummu2dcache_req_i),
+    .wr_en                (cache_tag_wr_sel),
+    .addr                 (addr_index),
+    .wdata                (cache_tag_write),
+    .rdata                (cache_tag_read)  
 );
 
  //////////////////////////////////////////////////////////////////////////
  //888888888888888888888888888888888888888888888888888888888888888888888888   
 victim_cache victim_cache_module (
-  .clk                      (clk),
-  .rst                      (rst_n),
-  .cache_to_victim_data     (cache_line_read),
-  .cache_to_victim_tag      (cache_tag_read.tag[DCACHE_TAG_BITS-1:0]),
-  .write_to_victim          (write_to_victim),
-  .victim_to_cache_data     (victim2cache_data),
-  .victim_to_cache_tag      (victim2cache_tag),
-  .victim_hit               (victim_hit)
+    .clk                      (clk),
+    .rst                      (rst_n),
+    .cache_to_victim_data     (cache_line_read),
+    .cache_to_victim_tag      (cache_tag_read.tag[DCACHE_TAG_BITS-1:0]),
+    .write_to_victim          (write_to_victim),
+    .victim_to_cache_data     (victim2cache_data),
+    .victim_to_cache_tag      (victim2cache_tag),
+    .victim_hit               (victim_hit)
 );
  //888888888888888888888888888888888888888888888888888888888888888888888888   
  //////////////////////////////////////////////////////////////////////////
@@ -251,9 +253,35 @@ assign cache_hit_o          = (addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS
 assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid;
 assign dcache2mem_addr_o    = dcache2mem_addr;
 assign dcache2mem_data_o    = cache_line_read;
+
+// data goes to lsu
 assign dcache2lsummu_data_o = dcache2lsummu_data_next;
 
 //goes to controller for control victim cache
+assign dcache2lsummu_data_o = lsu_victim_mux_sel ? victim2cache_data : dcache2lsummu_data_next;
+
 assign dcache_valid_o = cache_tag_read.valid;
 
+always_comb begin
+
+    if (lsu_victim_mux_sel) begin
+        if (addr_offset_ff == 2'b00) begin
+            dcache2lsummu_data_o = victim2cache_data[];
+        end
+        else if (addr_offset_ff == 2'b01) begin
+            dcache2lsummu_data_o = victim2cache_data[];
+        end
+        else if (addr_offset_ff == 2'b10) begin
+            dcache2lsummu_data_o = victim2cache_data[];
+        end
+        else if (addr_offset_ff == 2'b11)begin
+            dcache2lsummu_data_o = victim2cache_data[];
+        end
+    end
+
+    else begin
+        dcache2lsummu_data_o = dcache2lsummu_data_next;
+    end
+
+end
 endmodule
