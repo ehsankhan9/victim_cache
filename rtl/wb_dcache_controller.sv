@@ -125,9 +125,7 @@ always_comb begin
 
 
 ////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-
+//8888888888888888888888888888888888888888888888888888888888888
 
         DCACHE_PROCESS_REQ: begin  
 
@@ -146,7 +144,7 @@ always_comb begin
 
             else if (victim_hit) begin
                 write_from_victim = 1;
-                dcache_state_next = VICTIM;
+                dcache_state_next = DCACHE_VICTIM;
             end
 
             else if (dcache_miss) begin           
@@ -167,8 +165,7 @@ always_comb begin
             end           
         end
 
-        VICTIM: begin 
-                            
+        DCACHE_VICTIM: begin 
             if (lsummu2dcache_wr_ff) begin
                 cache_wr          = 1'b1;
                 dcache_state_next = DCACHE_IDLE; 
@@ -213,9 +210,7 @@ always_comb begin
             end
         end
 
-
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
+//8888888888888888888888888888888888888888888888888888888888888
 ///////////////////////////////////////////////////////////////////
 
 

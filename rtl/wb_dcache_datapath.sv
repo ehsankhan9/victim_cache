@@ -46,7 +46,6 @@ module wb_dcache_datapath(
     input logic                            write_to_victim  
 );
 
-
 type_dcache_data_s                   cache_line_read, cache_line_write, cache_wdata;
 type_dcache_tag_s                    cache_tag_read, cache_tag_write;
 
@@ -155,17 +154,17 @@ cache_tag_wr_sel = '0;
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    end else if (write_from_victim) begin
 
+ //////////////////////////////////////////////////////////////////////////
+ //888888888888888888888888888888888888888888888888888888888888888888888888   
+    end else if (write_from_victim) begin
         cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_tag};
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
     end
-
- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //888888888888888888888888888888888888888888888888888888888888888888888888   
+ //////////////////////////////////////////////////////////////////////////
 
 end
 
@@ -178,12 +177,13 @@ always_comb begin
     end
 end
  
- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////
 // MT
+ //888888888888888888888888888888888888888888888888888888888888888888888888   
 assign cache_wdata = write_from_victim ? victim2cache_data : cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_line_write : '0;
 assign cache_data_wr_sel = ( write_from_victim || cache_line_wr_i) ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
-
- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //888888888888888888888888888888888888888888888888888888888888888888888888   
+ //////////////////////////////////////////////////////////////////////////
 
 
 always_ff@(posedge clk) begin
@@ -215,7 +215,6 @@ dcache_data_ram dcache_data_ram_module (
   .rdata                (cache_line_read)  
 );
 
-
 dcache_tag_ram dcache_tag_ram_module (
   .clk                  (clk), 
   .rst_n                (rst_n),
@@ -227,6 +226,8 @@ dcache_tag_ram dcache_tag_ram_module (
   .rdata                (cache_tag_read)  
 );
 
+ //////////////////////////////////////////////////////////////////////////
+ //888888888888888888888888888888888888888888888888888888888888888888888888   
 victim_cache victim_cache_module (
   .cache_to_victim_data     (cache_line_read),
   .cache_to_victim_tag      (cache_tag_read.tag[DCACHE_TAG_BITS-1:0]),
@@ -235,6 +236,9 @@ victim_cache victim_cache_module (
   .victim_to_cache_tag      (victim2cache_tag),
   .victim_hit               (victim_hit)
 );
+ //888888888888888888888888888888888888888888888888888888888888888888888888   
+ //////////////////////////////////////////////////////////////////////////
+
 
 // Output signals update
 assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 

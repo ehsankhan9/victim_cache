@@ -34,7 +34,6 @@ parameter DATA_WIDTH = NUM_COL*COL_WIDTH          // Data Width in bits
 // Memory
 reg [DATA_WIDTH-1:0]             dcache_tagram[DCACHE_NO_OF_SETS-1:0];
 
-
 generate
 genvar i;
 
@@ -51,5 +50,6 @@ genvar i;
         end
     end
 endgenerate
+
 
 endmodule 
