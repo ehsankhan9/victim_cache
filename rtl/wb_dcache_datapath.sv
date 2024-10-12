@@ -254,28 +254,31 @@ assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid
 assign dcache2mem_addr_o    = dcache2mem_addr;
 assign dcache2mem_data_o    = cache_line_read;
 
+
+////////////////////////////////////////////////////////////////////////
+//8888888888888888888888888888888888888888888888888888888888888888888888
 // data goes to lsu
-assign dcache2lsummu_data_o = dcache2lsummu_data_next;
+// assign dcache2lsummu_data_o = dcache2lsummu_data_next;
 
-//goes to controller for control victim cache
-assign dcache2lsummu_data_o = lsu_victim_mux_sel ? victim2cache_data : dcache2lsummu_data_next;
+// goes to controller for control victim cache
+// assign dcache2lsummu_data_o = lsu_victim_mux_sel ? victim2cache_data : dcache2lsummu_data_next;
 
-assign dcache_valid_o = cache_tag_read.valid;
+assign dcache_valid_o = cache_tag_read.valid;  // data in dcache is valid or not, for write in victim cache  
 
 always_comb begin
 
     if (lsu_victim_mux_sel) begin
         if (addr_offset_ff == 2'b00) begin
-            dcache2lsummu_data_o = victim2cache_data[];
+            dcache2lsummu_data_o = victim2cache_data[31:0];
         end
         else if (addr_offset_ff == 2'b01) begin
-            dcache2lsummu_data_o = victim2cache_data[];
+            dcache2lsummu_data_o = victim2cache_data[63:32];
         end
         else if (addr_offset_ff == 2'b10) begin
-            dcache2lsummu_data_o = victim2cache_data[];
+            dcache2lsummu_data_o = victim2cache_data[95:64];
         end
         else if (addr_offset_ff == 2'b11)begin
-            dcache2lsummu_data_o = victim2cache_data[];
+            dcache2lsummu_data_o = victim2cache_data[127:96];
         end
     end
 
@@ -284,4 +287,7 @@ always_comb begin
     end
 
 end
+//8888888888888888888888888888888888888888888888888888888888888888888888
+////////////////////////////////////////////////////////////////////////
+
 endmodule
