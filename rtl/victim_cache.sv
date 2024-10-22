@@ -7,14 +7,14 @@
 // Author: Ehsan Khan, Muhammad Mujtaba Rawn, Moazzam Ali, UET Lahore
 // Date: 08.10.2024
 
+parameter VICTIM_NO_OF_SETS = 4;
+parameter int DCACHE_LINE_WIDTH = 128; 
+parameter int DCACHE_TAG_BITS = 20;    
 
-`ifndef VERILATOR
-`include "../../defines/cache_defs.svh"
-`else
-`include "cache_defs.svh"
-`endif
 
 module victim_cache (
+    input logic                            clk,
+    input logic                            rst,
     input logic [DCACHE_LINE_WIDTH-1 : 0]  cache_to_victim_data,  //incomming_data
     input logic [DCACHE_TAG_BITS-1  : 0]   cache_to_victim_tag,   //incomming_tag (original tag is of 8 bit which is 0's extend with valid aad dirty
     input logic                            write_to_victim,

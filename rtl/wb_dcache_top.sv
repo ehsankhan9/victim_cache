@@ -7,13 +7,9 @@
 // Author: Muhammad Tahir, UET Lahore
 // Date: 11.6.2023
 
-`timescale 1 ns / 100 ps
+// `timescale 1 ns / 100 ps
 
-`ifndef VERILATOR
-`include "../../defines/cache_defs.svh"
-`else
-`include "cache_defs.svh"
-`endif
+`include "../defines/cache_defs.svh"
 
 module wb_dcache_top (
     input wire                         clk,
@@ -51,6 +47,7 @@ logic                             dcache_valid;
 logic                             victim_hit;
 logic                             write_from_victim;
 logic                             write_to_victim;
+logic                             lsu_victim_mux_sel;
 
 assign lsummu2dcache = lsummu2dcache_i;
 assign mem2dcache    = mem2dcache_i;
@@ -84,9 +81,10 @@ wb_dcache_controller wb_dcache_controller_module(
   .dmem_sel_i              (dmem_sel_i),
 
   //victim cache to/from dcache
-  .victim_hit              (victim_hit),
-  .write_from_victim       (write_from_victim),
-  .write_to_victim         (write_to_victim),
+  .write_to_victim_o       (write_to_victim),
+  .write_from_victim_o     (write_from_victim),
+  .lsu_victim_mux_sel_o    (lsu_victim_mux_sel),
+  .victim_hit_i            (victim_hit),
   .dcache_valid_i          (dcache_valid)
 );  
 
@@ -117,10 +115,11 @@ wb_dcache_datapath wb_dcache_datapath_module(
   .dcache2mem_addr_o       (dcache2mem.addr),
 
   //victim cache to/from dcache
-  .victim_hit              (victim_hit),
-  .write_from_victim       (write_from_victim),
-  .write_to_victim         (write_to_victim),
-  .dcache_valid_o          (dcache_valid)
+  .victim_hit_o            (victim_hit),
+  .dcache_valid_o          (dcache_valid),
+  .write_to_victim_i       (write_to_victim),
+  .write_from_victim_i     (write_from_victim),
+  .lsu_victim_mux_sel_i    (lsu_victim_mux_sel)
 );
 
 assign dcache2lsummu_o = dcache2lsummu;

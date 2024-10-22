@@ -7,14 +7,10 @@
 // Author: Muhammad Tahir, UET Lahore
 // Date: 11.6.2023
 
-`timescale 1 ns / 100 ps
+// `timescale 1 ns / 100 ps
 
-`ifndef VERILATOR
-`include "../../defines/cache_defs.svh"
-`else
-`include "cache_defs.svh"
-`endif
-
+`include "../defines/cache_defs.svh"
+//parameter int DCACHE_IDX_BITS = 11;
 
 module wb_dcache_controller (
     input wire                            clk, 
@@ -41,13 +37,15 @@ module wb_dcache_controller (
     output logic                          dcache2mem_req_o,
     output logic                          dcache2mem_wr_o,
     output logic                          dcache2mem_kill_o,
-    input wire                            dmem_sel_i
+    input wire                            dmem_sel_i,
 
     //victim cache to/from dcache
     input  logic                          dcache_valid_i,
-    input  logic                          victim_hit,
-    output logic                          write_from_victim,
-    output logic                          write_to_victim
+    input  logic                          victim_hit_i,
+    output logic                          write_from_victim_o,
+    output logic                          write_to_victim_o,
+    output logic                          lsu_victim_mux_sel_o 
+
 );
          
 
@@ -109,8 +107,9 @@ always_comb begin
     cache_line_clean  = 1'b0;
     cache_wr          = 1'b0;
     dcache2mem_kill   = 1'b0;
-    write_from_victim = '0;
-    write_to_victim   = '0;
+    write_from_victim_o = '0;
+    write_to_victim_o   = '0;
+    lsu_victim_mux_sel_o= 0;
     
     unique case (dcache_state_ff)
         DCACHE_IDLE: begin
@@ -144,24 +143,25 @@ always_comb begin
                 end
             end 
 
-            else if (dcache_miss && victim_hit) begin
+            else if (dcache_miss && victim_hit_i) begin
                 if (lsummu2dcache_wr_ff) begin
-                    write_from_victim = 1;
+                    write_from_victim_o = 1;
                     dcache_state_next = DCACHE_VICTIM;                
                 end
-                else (!lsummu2dcache_wr_ff) begin
-                    write_from_victim = 0;
+                else if (!lsummu2dcache_wr_ff) begin
+                    lsu_victim_mux_sel_o= 1;
+                    write_from_victim_o = 0;
                     dcache_state_next = DCACHE_IDLE;                
                 end
             end
 
-            else if (dcache_miss && !victim_hit) begin           
+            else if (dcache_miss && !victim_hit_i) begin           
                 if (dcache_evict) begin
                     if (dcache_valid_i) begin
-                        write_to_victim   = 1'b1;
+                        write_to_victim_o   = 1'b1;
                     end
                     else begin
-                        write_to_victim   = 1'b0;
+                        write_to_victim_o   = 1'b0;
                     end
                     dcache_state_next = DCACHE_WRITE_BACK;
                     dcache2mem_req    = 1'b1;
@@ -170,10 +170,10 @@ always_comb begin
                 end 
                 else begin 
                     if (dcache_valid_i) begin
-                        write_to_victim   = 1'b1;
+                        write_to_victim_o   = 1'b1;
                     end
                     else begin
-                        write_to_victim   = 1'b0;
+                        write_to_victim_o   = 1'b0;
                     end
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
@@ -230,10 +230,10 @@ always_comb begin
 ///////////////////////////////////////////////////////////////////
 
 
-        DCACHE_WRITE: begin
-             dcache_state_next = DCACHE_IDLE; 
-             dcache2lsummu_ack = 1'b1;  
-        end
+//        DCACHE_WRITE: begin
+//             dcache_state_next = DCACHE_IDLE; 
+//             dcache2lsummu_ack = 1'b1;  
+//        end
         
         DCACHE_FLUSH_NEXT: begin  
             // Ack from cache, data is written simultaneously          

@@ -7,11 +7,8 @@
 // Author: Muhammad Tahir, UET Lahore
 // Date: 11.6.2023
 
-`ifndef VERILATOR
-`include "../../defines/cache_defs.svh"
-`else
-`include "cache_defs.svh"
-`endif
+
+parameter int DCACHE_NO_OF_SETS = 2048;
 
 module dcache_data_ram
 #(
