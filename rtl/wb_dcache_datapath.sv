@@ -62,7 +62,8 @@ logic                                dcache_flush;
                             
 ///logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
 logic [DCACHE_LINE_WIDTH-1:0]        victim2cache_data;
-logic [DCACHE_TAG_BITS-1:0]          victim2cache_tag;      
+// logic [DCACHE_TAG_BITS-1:0]          victim2cache_tag;      
+logic [22:0]          victim2cache_tag;      
 
 assign dcache_flush         = dcache_flush_i;
 assign evict_index          = evict_index_i;
@@ -119,7 +120,7 @@ always_comb begin
     cache_line_write = '0;  // MT cache_line_read
     cache_line_sel_byte = '0;
 
-    unique case (addr_offset_ff)
+    case (addr_offset_ff)
         2'b00: begin
             cache_line_write[31:0]   = cache_word_write;
             cache_line_sel_byte[3:0] = sel_byte;
@@ -159,7 +160,8 @@ cache_tag_wr_sel = '0;
  //////////////////////////////////////////////////////////////////////////
  //888888888888888888888888888888888888888888888888888888888888888888888888   
     end else if (write_from_victim_i) begin
-        cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_tag};
+        // cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_tag};
+        cache_tag_write.tag   = victim2cache_tag;
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
@@ -233,7 +235,7 @@ victim_cache victim_cache_module (
     .clk                      (clk),
     .rst                      (rst_n),
     .cache_to_victim_data     (cache_line_read),
-    .cache_to_victim_tag      (cache_tag_read.tag[DCACHE_TAG_BITS-1:0]),
+    .cache_to_victim_tag      (cache_tag_read.tag),
     .write_to_victim_i          (write_to_victim_i),
     .victim_to_cache_data     (victim2cache_data),
     .victim_to_cache_tag      (victim2cache_tag),
