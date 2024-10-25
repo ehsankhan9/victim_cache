@@ -4,7 +4,7 @@
 //
 // Description: The Victim-Cache for data cache. 
 //
-// Author: Ehsan Khan, Muhammad Mujtaba Rawn, Moazzam Ali, UET Lahore
+// Author: Muhammad Ehsan, Muhammad Mujtaba Rawn, Moazzam Ali
 // Date: 08.10.2024
 
 // `include "../defines/cache_defs.svh"
@@ -26,10 +26,11 @@ module victim_cache (
     output logic                           victim_hit_o
 );
 
-//////////////    VICTIM_CACHE      ///////////////     
+//////////////    VICTIM_CACHE      /////////////// 
+
 ////////////// VICTIM_NO_OF_SETS = 4  ////////////
 logic [DCACHE_LINE_WIDTH-1 : 0] victim_cache_data  [VICTIM_NO_OF_SETS-1:0];
-logic [DCACHE_TAG_BITS-1  : 0]  victim_cache_tag   [VICTIM_NO_OF_SETS-1:0];
+logic [DCACHE_TAG_BITS-1   : 0] victim_cache_tag   [VICTIM_NO_OF_SETS-1:0];
 ///////////////////////////////////////////////////
 
 logic [3:0] write_counter;
@@ -41,22 +42,37 @@ always_comb begin
         victim_to_cache_tag  = victim_cache_tag[0] ;
         victim_hit_o = 1;
     end 
-    else if (cache_to_victim_tag == victim_cache_tag[1]) begin
-        victim_to_cache_data = victim_cache_data[1];
-        victim_to_cache_tag  = victim_cache_tag[1];
-        victim_hit_o = 1;
+    genvar i;
+    generate
+    for (i=1; i<4; i++) begin
+    
+    else if (cache_to_victim_tag == victim_cache_tag[i]) begin
+    victim_to_cache_data = victim_cache_data[i];
+    victim_to_cache_tag  = victim_cache_tag[i];
+    victim_hit_o = 1;
+    
+    end        
     end
-    else if (cache_to_victim_tag == victim_cache_tag[2]) begin
-        victim_to_cache_data = victim_cache_data[2];
-        victim_to_cache_tag  = victim_cache_tag[2];
-        victim_hit_o = 1;
-    end
-    else if (cache_to_victim_tag == victim_cache_tag[3]) begin
-        victim_to_cache_data = victim_cache_data[3];
-        victim_to_cache_tag  = victim_cache_tag[3];
-        victim_hit_o = 1;
-    end
+    endgenerate
+    
+    // else if (cache_to_victim_tag == victim_cache_tag[1]) begin
+    //     victim_to_cache_data = victim_cache_data[1];
+    //     victim_to_cache_tag  = victim_cache_tag[1];
+    //     victim_hit_o = 1;
+    // end
+    // else if (cache_to_victim_tag == victim_cache_tag[2]) begin
+    //     victim_to_cache_data = victim_cache_data[2];
+    //     victim_to_cache_tag  = victim_cache_tag[2];
+    //     victim_hit_o = 1;
+    // end
+    // else if (cache_to_victim_tag == victim_cache_tag[3]) begin
+    //     victim_to_cache_data = victim_cache_data[3];
+    //     victim_to_cache_tag  = victim_cache_tag[3];
+    //     victim_hit_o = 1;
+    // end
     else begin
+        victim_to_cache_data = victim_cache_data[0];  /// for simulation
+        victim_to_cache_tag  = victim_cache_tag[0];   ///for simulation
         victim_hit_o = 0; 
     end
 end

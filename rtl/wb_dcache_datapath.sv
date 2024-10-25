@@ -63,7 +63,7 @@ logic                                dcache_flush;
 ///logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
 logic [DCACHE_LINE_WIDTH-1:0]        victim2cache_data;
 // logic [DCACHE_TAG_BITS-1:0]          victim2cache_tag;      
-logic [22:0]          victim2cache_tag;      
+logic [22:0]                         victim2cache_tag;      
 
 assign dcache_flush         = dcache_flush_i;
 assign evict_index          = evict_index_i;
