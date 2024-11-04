@@ -235,11 +235,11 @@ victim_cache victim_cache_module (
     .clk                      (clk),
     .rst                      (rst_n),
     .cache_to_victim_data     (cache_line_read),
-    .cache_to_victim_tag      (cache_tag_read.tag),
-    .write_to_victim_i          (write_to_victim_i),
+    .cache_to_victim_tag      (addr_tag),
+    .write_to_victim_i        (write_to_victim_i),
     .victim_to_cache_data     (victim2cache_data),
     .victim_to_cache_tag      (victim2cache_tag),
-    .victim_hit_o               (victim_hit_o)
+    .victim_hit_o              (victim_hit_o)
 );
  //888888888888888888888888888888888888888888888888888888888888888888888888   
  //////////////////////////////////////////////////////////////////////////
@@ -249,6 +249,20 @@ victim_cache victim_cache_module (
 assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 
 
 assign cache_hit_o          = (addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0]) && cache_tag_read.valid;
+//always_comb begin 
+//    if (cache_tag_read.valid) begin
+//        if ((addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0])) begin
+//            cache_hit_o = 1;
+//        end
+//        else begin
+//            cache_hit_o = 0;
+//        end
+//    end
+//    else begin
+//        cache_hit_o = 0;
+//    end
+//end
+
 assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid;
 assign dcache2mem_addr_o    = dcache2mem_addr;
 assign dcache2mem_data_o    = cache_line_read;

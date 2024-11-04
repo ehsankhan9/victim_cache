@@ -36,46 +36,42 @@ logic [DCACHE_TAG_BITS-1   : 0] victim_cache_tag   [VICTIM_NO_OF_SETS-1:0];
 logic [3:0] write_counter;
 
 /////////////////////////////////////////////////
-always_comb begin 
-    if (cache_to_victim_tag == victim_cache_tag[0]) begin
-        victim_to_cache_data = victim_cache_data[0];
-        victim_to_cache_tag  = victim_cache_tag[0] ;
-        victim_hit_o = 1;
-    end 
-    genvar i;
-    generate
-    for (i=1; i<4; i++) begin
-    
-    else if (cache_to_victim_tag == victim_cache_tag[i]) begin
-    victim_to_cache_data = victim_cache_data[i];
-    victim_to_cache_tag  = victim_cache_tag[i];
-    victim_hit_o = 1;
-    
-    end        
-    end
-    endgenerate
-    
-    // else if (cache_to_victim_tag == victim_cache_tag[1]) begin
-    //     victim_to_cache_data = victim_cache_data[1];
-    //     victim_to_cache_tag  = victim_cache_tag[1];
-    //     victim_hit_o = 1;
-    // end
-    // else if (cache_to_victim_tag == victim_cache_tag[2]) begin
-    //     victim_to_cache_data = victim_cache_data[2];
-    //     victim_to_cache_tag  = victim_cache_tag[2];
-    //     victim_hit_o = 1;
-    // end
-    // else if (cache_to_victim_tag == victim_cache_tag[3]) begin
-    //     victim_to_cache_data = victim_cache_data[3];
-    //     victim_to_cache_tag  = victim_cache_tag[3];
-    //     victim_hit_o = 1;
-    // end
-    else begin
-        victim_to_cache_data = victim_cache_data[0];  /// for simulation
-        victim_to_cache_tag  = victim_cache_tag[0];   ///for simulation
-        victim_hit_o = 0; 
+//genvar i;
+//generate
+//for (i=0; i<4; i++) begin
+//    always_comb begin    
+//        
+//        if (cache_to_victim_tag == victim_cache_tag[i]) begin
+//            victim_to_cache_data = victim_cache_data[i];
+//            victim_to_cache_tag  = victim_cache_tag[i];
+//            victim_hit_o = 1;
+//        end         
+//        
+//        //else begin
+//        //    victim_to_cache_data = '0;  /// for simulation
+//        //    victim_to_cache_tag  = '0;   ///for simulation
+//        //    victim_hit_o = 0; 
+//        //end
+//    end
+//end
+//endgenerate
+genvar i;
+generate
+always_comb begin
+    victim_hit_o = 0; // Default values
+    victim_to_cache_data = '0;
+    victim_to_cache_tag = '0;
+
+    for (int i = 0; i < VICTIM_NO_OF_SETS; i++) begin
+        if (cache_to_victim_tag == victim_cache_tag[i]) begin
+            victim_to_cache_data = victim_cache_data[i];
+            victim_to_cache_tag = victim_cache_tag[i];
+            victim_hit_o = 1;
+            //break; // Stop the loop after the first match
+        end
     end
 end
+endgenerate
 
 always_ff @(posedge clk or negedge rst) begin 
     if (!rst) begin
