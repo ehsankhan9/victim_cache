@@ -169,12 +169,12 @@ always_comb begin
                     cache_wrb_req     = 1'b1;
                 end 
                 else begin 
-                    if (dcache_valid_i) begin
+                    //if (dcache_valid_i) begin
                         write_to_victim_o   = 1'b1;
-                    end
-                    else begin
-                        write_to_victim_o   = 1'b0;
-                    end
+                    //end
+                    //else begin
+                    //   write_to_victim_o   = 1'b0;
+                    //end
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
                 end
@@ -221,30 +221,6 @@ always_comb begin
             end
         end
 
-        // DCACHE_WRITE_BACK: begin  
-
-        //     if (mem2dcache_ack_i) begin  
-        //       //  dcache_state_next = DCACHE_ALLOCATE;
-        //         if (dcache_flush_i) begin
-        //             dcache_state_next = DCACHE_FLUSH_NEXT; // DCACHE_FLUSH;
-        //             cache_line_clean  = 1'b1;
-        //             if (~(&evict_index_ff)) begin  // evict_index_ff < DCACHE_MAX_IDX
-        //                 evict_index_next  = evict_index_ff + 1;
-        //             end
-        //         end else begin
-        //             dcache_state_next = DCACHE_ALLOCATE;
-        //             dcache2mem_req    = 1'b1;
-        //         end 
-        //     end 
-        //     else begin
-        //         dcache_state_next = DCACHE_WRITE_BACK;
-        //         dcache2mem_req    = 1'b1;
-        //         dcache2mem_wr     = 1'b1;
-        //         cache_wrb_req     = 1'b1;
-        //     end
-        // end
-
-//8888888888888888888888888888888888888888888888888888888888888
 ///////////////////////////////////////////////////////////////////
 
         
