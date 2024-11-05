@@ -71,7 +71,6 @@ parameter DCACHE_ADDR_WIDTH  = `XLEN;
 parameter DCACHE_DATA_WIDTH  = `XLEN;
 parameter DCACHE_LINE_WIDTH  = 128;            // Line width is in bits
 parameter DCACHE_NO_OF_SETS  = `DCACHE_SETS; // 2048;
-parameter VICTIM_NO_OF_SETS  =  4;           //for victim cache
 
 parameter DCACHE_OFFSET_BITS = $clog2(DCACHE_LINE_WIDTH/8);
 parameter DCACHE_IDX_BITS    = $clog2(DCACHE_NO_OF_SETS); 
@@ -79,6 +78,11 @@ parameter DCACHE_TAG_BITS    = DCACHE_ADDR_WIDTH - DCACHE_IDX_BITS - DCACHE_OFFS
 parameter DCACHE_TAG_LSB     = DCACHE_ADDR_WIDTH - DCACHE_TAG_BITS; 
 
 parameter DCACHE_MAX_IDX     = DCACHE_IDX_BITS'(DCACHE_NO_OF_SETS - 1);
+
+//victim cache
+parameter VICTIM_NO_OF_SETS   =  4;           
+parameter VICTIM_ADDR_BITS    = DCACHE_ADDR_WIDTH - DCACHE_OFFSET_BITS;
+parameter VICTIM_COUNTER_BITS = $clog2(VICTIM_NO_OF_SETS);
 
 typedef enum logic [2:0] {
     DCACHE_IDLE, 

@@ -60,10 +60,10 @@ logic [DCACHE_IDX_BITS-1:0]          addr_index, addr_index_ff;
 logic [DCACHE_IDX_BITS-1:0]          evict_index;
 logic                                dcache_flush;   
                             
-///logic [DCACHE_DATA_WIDTH-1:0]        victim2cache_data;
-logic [DCACHE_LINE_WIDTH-1:0]        victim2cache_data;
-// logic [DCACHE_TAG_BITS-1:0]          victim2cache_tag;      
-logic [22:0]                         victim2cache_tag;      
+
+logic [DCACHE_LINE_WIDTH-1:0]        victim2cache_data;     
+logic [VICTIM_ADDR_BITS-1 :0]        victim2cache_addr;      
+logic [VICTIM_ADDR_BITS-1 :0]        cache2victim_addr;      
 
 assign dcache_flush         = dcache_flush_i;
 assign evict_index          = evict_index_i;
@@ -74,6 +74,9 @@ assign addr_tag             = lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_TA
 assign addr_offset          = lsummu2dcache_addr_i[DCACHE_OFFSET_BITS-1:2];
 assign addr_index           = dcache_flush ? evict_index : cache_wr_i ? addr_index_ff :
                               lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
+
+assign cache2victim_addr   = write_to_victim_i ?    addr_index_ff[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS] : 
+                                                    lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
 
 
 always_ff@(posedge clk) begin
@@ -160,8 +163,8 @@ cache_tag_wr_sel = '0;
  //////////////////////////////////////////////////////////////////////////
  //888888888888888888888888888888888888888888888888888888888888888888888888   
     end else if (write_from_victim_i) begin
-        // cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_tag};
-        cache_tag_write.tag   = victim2cache_tag;
+        // cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_addr};
+        cache_tag_write.tag   = victim2cache_addr[VICTIM_ADDR_BITS-1:DCACHE_IDX_BITS];
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
@@ -235,11 +238,11 @@ victim_cache victim_cache_module (
     .clk                      (clk),
     .rst                      (rst_n),
     .cache_to_victim_data     (cache_line_read),
-    .cache_to_victim_tag      (addr_tag),
+    .cache_to_victim_addr     (cache2victim_addr),
     .write_to_victim_i        (write_to_victim_i),
     .victim_to_cache_data     (victim2cache_data),
-    .victim_to_cache_tag      (victim2cache_tag),
-    .victim_hit_o              (victim_hit_o)
+    .victim_to_cache_addr     (victim2cache_addr),
+    .victim_hit_o             (victim_hit_o)
 );
  //888888888888888888888888888888888888888888888888888888888888888888888888   
  //////////////////////////////////////////////////////////////////////////
