@@ -9,15 +9,22 @@
 
 // `include "../defines/cache_defs.svh"
 
-parameter VICTIM_NO_OF_SETS = 4;
-parameter VICTIM_COUNTER_BITS = $clog2(VICTIM_NO_OF_SETS);
-parameter DCACHE_LINE_WIDTH = 128; 
-parameter VICTIM_ADDR_BITS = 28;   //VICTIM_ADDR_BITS = DCACHE_ADDR_WIDTH - DCACHE_OFFSET_BITS;
+// parameter VICTIM_NO_OF_SETS = 4;
+// parameter VICTIM_COUNTER_BITS = $clog2(VICTIM_NO_OF_SETS);
+// parameter DCACHE_LINE_WIDTH = 128; 
+// parameter VICTIM_ADDR_BITS = 28;   //VICTIM_ADDR_BITS = DCACHE_ADDR_WIDTH - DCACHE_OFFSET_BITS;
 
+`ifndef VERILATOR
+`include "../defines/cache_defs.svh"
+`else
+`include "cache_defs.svh"
+`endif
 
 module victim_cache (
     input logic                            clk,
     input logic                            rst,
+    input logic                            flush_i,
+
     input logic [DCACHE_LINE_WIDTH-1 : 0]  cache_to_victim_data,  //incomming_data
     input logic [VICTIM_ADDR_BITS-1  : 0]  cache_to_victim_addr,   //incomming_tag (original tag is of 8 bit which is 0's extend with valid aad dirty
     input logic                            write_to_victim_i,
@@ -34,63 +41,66 @@ logic [VICTIM_ADDR_BITS-1   : 0] victim_cache_addr   [VICTIM_NO_OF_SETS-1:0];
 ///////////////////////////////////////////////////
 
 logic [VICTIM_COUNTER_BITS-1:0] write_counter;
+logic [VICTIM_NO_OF_SETS-1:0]   valid;
 
 /////////////////////////////////////////////////
-//genvar i;
-//generate
-//for (i=0; i<4; i++) begin
-//    always_comb begin    
-//        
-//        if (cache_to_victim_addr == victim_cache_addr[i]) begin
-//            victim_to_cache_data = victim_cache_data[i];
-//            victim_to_cache_addr  = victim_cache_addr[i];
-//            victim_hit_o = 1;
-//        end         
-//        
-//        //else begin
-//        //    victim_to_cache_data = '0;  /// for simulation
-//        //    victim_to_cache_addr  = '0;   ///for simulation
-//        //    victim_hit_o = 0; 
-//        //end
-//    end
-//end
-//endgenerate
-genvar i;
-generate
-always_comb begin
-    victim_hit_o = 0; // Default values
-    victim_to_cache_data = '0;
-    victim_to_cache_addr = '0;
 
-    for (int i = 0; i < VICTIM_NO_OF_SETS; i++) begin
-        if (cache_to_victim_addr == victim_cache_addr[i]) begin
-            victim_to_cache_data = victim_cache_data[i];
-            victim_to_cache_addr = victim_cache_addr[i];
-            victim_hit_o = 1;
-            //break; // Stop the loop after the first match
+always_ff @(posedge clk or negedge rst) begin 
+    if (!rst || flush_i) begin
+        write_counter  <= 2'b00;
+        valid          <= 4'b0000;
+    end
+    else if (write_to_victim_i) begin
+        if ((cache_to_victim_addr == victim_cache_addr[0]) && valid[0]) begin
+            victim_cache_data[0]  <= cache_to_victim_data;
+        end 
+        else if ((cache_to_victim_addr == victim_cache_addr[1]) && valid[1]) begin
+            victim_cache_data[1]  <= cache_to_victim_data;
+        end
+        else if ((cache_to_victim_addr == victim_cache_addr[2]) && valid[2]) begin
+            victim_cache_data[2]  <= cache_to_victim_data;
+        end
+        else if ((cache_to_victim_addr == victim_cache_addr[3]) && valid[3]) begin
+            victim_cache_data[3]  <= cache_to_victim_data;
+        end
+        else begin
+            valid[write_counter]              <= 1'b1;
+            victim_cache_data[write_counter]  <= cache_to_victim_data;
+            victim_cache_addr [write_counter] <= cache_to_victim_addr;
+            write_counter                     <= write_counter + 1'b1;            
         end
     end
 end
-endgenerate
 
-always_ff @(posedge clk or negedge rst) begin 
-    if (!rst) begin
-        victim_cache_addr <= '{default : '0};  
-    end
-    else if (write_to_victim_i) begin
-        victim_cache_data[write_counter]  <= cache_to_victim_data;
-        victim_cache_addr [write_counter] <= cache_to_victim_addr;
-    end
 
-    // this is case if VICTIM_NO_OF_SETS is not give integer clog2;
-    if (!rst || (write_counter == (VICTIM_NO_OF_SETS-1))) begin
-        write_counter                     <= '0;
+always_comb begin
+    if (valid[0] && (cache_to_victim_addr == victim_cache_addr[0])) begin
+        victim_to_cache_data  =  victim_cache_data[0];
+        victim_to_cache_addr  =  victim_cache_addr[0];
+        victim_hit_o = 1'b1;
     end
-    else if (write_to_victim_i) begin
-        write_counter                     <= write_counter + 1;
+    else if (valid[1] && (cache_to_victim_addr == victim_cache_addr[1])) begin
+        victim_to_cache_data  =  victim_cache_data[1];
+        victim_to_cache_addr  =  victim_cache_addr[1];
+        victim_hit_o = 1'b1;
     end
-
+    else if (valid[2] && (cache_to_victim_addr == victim_cache_addr[2])) begin
+        victim_to_cache_data  =  victim_cache_data[2];
+        victim_to_cache_addr  =  victim_cache_addr[2];
+        victim_hit_o = 1'b1;
+    end
+    else if (valid[3] && (cache_to_victim_addr == victim_cache_addr[3])) begin
+        victim_to_cache_data  =  victim_cache_data[3];
+        victim_to_cache_addr  =  victim_cache_addr[3];
+        victim_hit_o = 1'b1;
+    end
+    else  begin
+        victim_to_cache_data = '0;
+        victim_to_cache_addr = '0;
+        victim_hit_o = 1'b0;
+    end
 end
 
 
 endmodule
+

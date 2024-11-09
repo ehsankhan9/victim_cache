@@ -7,7 +7,11 @@
 // Author: Muhammad Tahir, UET Lahore
 // Date: 11.6.2023
 
+`ifndef VERILATOR
 `include "../defines/cache_defs.svh"
+`else
+`include "cache_defs.svh"
+`endif
 
 module wb_dcache_datapath(
     input  wire                            clk,
@@ -75,9 +79,12 @@ assign addr_offset          = lsummu2dcache_addr_i[DCACHE_OFFSET_BITS-1:2];
 assign addr_index           = dcache_flush ? evict_index : cache_wr_i ? addr_index_ff :
                               lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
 
-assign cache2victim_addr   = write_to_victim_i ?    {addr_tag_ff  , addr_index_ff} : 
-                                                    lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
+assign cache2victim_addr    = write_to_victim_i ? lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS]:
+                            {cache_tag_read.tag[DCACHE_TAG_BITS-1:0],addr_index};
 
+// assign cache2victim_addr    = lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
+
+// assign cache2victim_addr    = {cache_tag_read, addr_index};
 
 always_ff@(posedge clk) begin
    if(!rst_n) begin
@@ -151,6 +158,7 @@ cache_tag_wr_sel = '0;
     if (cache_line_clean_i) begin // Only clean (not invalidate) cache line on flush
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'h8;
+        // cache_tag_wr_sel      = 4'hF;
     end else if (cache_wr_i) begin
         cache_tag_write.dirty = 8'b1;
         cache_tag_wr_sel      = 4'h8;
@@ -237,6 +245,7 @@ dcache_tag_ram dcache_tag_ram_module (
 victim_cache victim_cache_module (
     .clk                      (clk),
     .rst                      (rst_n),
+    .flush_i                  (dcache_flush),
     .cache_to_victim_data     (cache_line_read),
     .cache_to_victim_addr     (cache2victim_addr),
     .write_to_victim_i        (write_to_victim_i),
@@ -252,19 +261,19 @@ victim_cache victim_cache_module (
 assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 
 
 assign cache_hit_o          = (addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0]) && cache_tag_read.valid;
-//always_comb begin 
-//    if (cache_tag_read.valid) begin
-//        if ((addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0])) begin
-//            cache_hit_o = 1;
-//        end
-//        else begin
-//            cache_hit_o = 0;
-//        end
-//    end
-//    else begin
-//        cache_hit_o = 0;
-//    end
-//end
+// always_comb begin 
+    // if (cache_tag_read.valid) begin
+        // if ((addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0])) begin
+            // cache_hit_o = 1;
+        // end
+        // else begin
+            // cache_hit_o = 0;
+        // end
+    // end
+    // else begin
+        // cache_hit_o = 0;
+    // end
+// end
 
 assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid;
 assign dcache2mem_addr_o    = dcache2mem_addr;

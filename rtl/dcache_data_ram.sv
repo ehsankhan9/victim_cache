@@ -8,7 +8,7 @@
 // Date: 11.6.2023
 
 
-parameter int DCACHE_NO_OF_SETS = 2048;
+parameter int DCACHE_NO_OF_SETS = 32; //2048;
 
 module dcache_data_ram
 #(
