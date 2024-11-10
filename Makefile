@@ -1,6 +1,6 @@
 # Define variables
-TOP_MODULE = tb_cache
-SRC_FILES =  defines/*.svh rtl/*.sv
+TOP_MODULE = wb_dcache_top_tb
+SRC_FILES =  defines/*.svh rtl/*.sv testbench/wb_dcache_top_tb.sv
 DEFINES_VER:= defines/*.svh
 WORK_DIR = work
 

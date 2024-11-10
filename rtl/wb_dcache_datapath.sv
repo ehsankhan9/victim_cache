@@ -79,8 +79,8 @@ assign addr_offset          = lsummu2dcache_addr_i[DCACHE_OFFSET_BITS-1:2];
 assign addr_index           = dcache_flush ? evict_index : cache_wr_i ? addr_index_ff :
                               lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
 
-assign cache2victim_addr    = write_to_victim_i ? lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS]:
-                            {cache_tag_read.tag[DCACHE_TAG_BITS-1:0],addr_index};
+assign cache2victim_addr    = write_to_victim_i ? {cache_tag_read.tag[DCACHE_TAG_BITS-1:0],addr_index}:
+                                lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
 
 // assign cache2victim_addr    = lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
 
