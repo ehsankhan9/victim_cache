@@ -219,11 +219,12 @@ always_comb begin
                     if (~(&evict_index_ff)) begin  // evict_index_ff < DCACHE_MAX_IDX
                         evict_index_next  = evict_index_ff + 1;
                     end
-                else if (victim_hit_i) begin
-                    dcache_state_next = DCACHE_PROCESS_REQ; // DCACHE_FLUSH;
-                    cache_line_clean = 1'b1;
-                    // cache_line_wr = 1'b1;
                 end
+                else if (victim_hit_i) begin
+                    dcache_state_next = DCACHE_VICTIM; // DCACHE_FLUSH;
+                    // cache_line_clean    = 1'b1;
+                    write_from_victim_o = 1'b1;
+                    // cache_line_wr = 1'b1;
                 end else begin
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;
@@ -235,6 +236,31 @@ always_comb begin
                 cache_wrb_req     = 1'b1;
             end
         end
+
+        // DCACHE_WRITE_BACK: begin  
+        //     if (mem2dcache_ack_i) begin  
+        //         if (dcache_flush_i) begin
+        //             dcache_state_next = DCACHE_FLUSH_NEXT; // DCACHE_FLUSH;
+        //             cache_line_clean  = 1'b1;
+        //             if (~(&evict_index_ff)) begin  // evict_index_ff < DCACHE_MAX_IDX
+        //                 evict_index_next  = evict_index_ff + 1;
+        //             end
+        //         else if (victim_hit_i) begin
+        //             dcache_state_next = DCACHE_PROCESS_REQ; // DCACHE_FLUSH;
+        //             cache_line_clean = 1'b1;
+        //             // cache_line_wr = 1'b1;
+        //         end
+        //         end else begin
+        //             dcache_state_next = DCACHE_ALLOCATE;
+        //             dcache2mem_req    = 1'b1;
+        //         end 
+        //     end else begin
+        //         dcache_state_next = DCACHE_WRITE_BACK;
+        //         dcache2mem_req    = 1'b1;
+        //         dcache2mem_wr     = 1'b1;
+        //         cache_wrb_req     = 1'b1;
+        //     end
+        // end
 
         DCACHE_FLUSH_NEXT: begin  
             // Ack from cache, data is written simultaneously          

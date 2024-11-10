@@ -171,6 +171,9 @@ module wb_dcache_top_tb();
             addr_A1 = {tag_A1, index, 4'b0}; // Address A1 with specific index and tag
             addr_A2 = {tag_A2, index, 4'b0}; // Address A2 with same index, different tag
     
+            // addr_A1 = 32'h0001_0000; // Address A1 with specific index and tag
+            // addr_A2 = 32'h0011_0000; // Address A2 with same index, different tag
+
             // Step 1: Write to A1
             write_data_A1 = $random;
             cpu(1, 0, write_data_A1, addr_A1); 

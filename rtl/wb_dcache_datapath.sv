@@ -155,9 +155,15 @@ always_comb begin
 cache_tag_write  = '0;
 cache_tag_wr_sel = '0;
   
+    // if (cache_line_clean_i && !write_from_victim_i) begin // Only clean (not invalidate) cache line on flush
     if (cache_line_clean_i) begin // Only clean (not invalidate) cache line on flush
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'h8;
+        // cache_tag_wr_sel      = 4'hF;
+    // end else if (cache_line_clean_i && write_from_victim_i) begin
+        // cache_tag_write.tag   = victim2cache_addr[VICTIM_ADDR_BITS-1:DCACHE_IDX_BITS];
+        // cache_tag_write.valid = 1'b1;
+        // cache_tag_write.dirty = 8'b0;
         // cache_tag_wr_sel      = 4'hF;
     end else if (cache_wr_i) begin
         cache_tag_write.dirty = 8'b1;
