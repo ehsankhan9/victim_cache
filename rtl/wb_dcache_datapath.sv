@@ -82,9 +82,6 @@ assign addr_index           = dcache_flush ? evict_index : cache_wr_i ? addr_ind
 assign cache2victim_addr    = write_to_victim_i ? {cache_tag_read.tag[DCACHE_TAG_BITS-1:0],addr_index}:
                                 lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
 
-// assign cache2victim_addr    = lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
-
-// assign cache2victim_addr    = {cache_tag_read, addr_index};
 
 always_ff@(posedge clk) begin
    if(!rst_n) begin
@@ -104,9 +101,7 @@ always_ff@(posedge clk) begin
     end
 end
 
-//assign cache_line_read = cache_data_ram[addr_index]; // MT
-////////////////////////////////////////////////
-////////////////////////////////////////////////
+
 always_comb begin
     unique case (addr_offset_ff) // MT
       2'b00:    cache_word_read = cache_line_read[31:0];
@@ -116,8 +111,7 @@ always_comb begin
     default:  cache_word_read = '0;
     endcase
 end
-////////////////////////////////////////////////
-////////////////////////////////////////////////
+
 always_comb begin
     cache_word_write = '0;  // MT cache_word_read      
         if (sel_byte[0]) cache_word_write[7:0]   = lsummu2dcache_wdata[7:0]; 
@@ -155,16 +149,9 @@ always_comb begin
 cache_tag_write  = '0;
 cache_tag_wr_sel = '0;
   
-    // if (cache_line_clean_i && !write_from_victim_i) begin // Only clean (not invalidate) cache line on flush
     if (cache_line_clean_i) begin // Only clean (not invalidate) cache line on flush
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'h8;
-        // cache_tag_wr_sel      = 4'hF;
-    // end else if (cache_line_clean_i && write_from_victim_i) begin
-        // cache_tag_write.tag   = victim2cache_addr[VICTIM_ADDR_BITS-1:DCACHE_IDX_BITS];
-        // cache_tag_write.valid = 1'b1;
-        // cache_tag_write.dirty = 8'b0;
-        // cache_tag_wr_sel      = 4'hF;
     end else if (cache_wr_i) begin
         cache_tag_write.dirty = 8'b1;
         cache_tag_wr_sel      = 4'h8;
@@ -173,19 +160,12 @@ cache_tag_wr_sel = '0;
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
-
- //////////////////////////////////////////////////////////////////////////
- //888888888888888888888888888888888888888888888888888888888888888888888888   
     end else if (write_from_victim_i) begin
-        // cache_tag_write.tag   = {{23-DCACHE_TAG_BITS{1'b0}}, victim2cache_addr};
         cache_tag_write.tag   = victim2cache_addr[VICTIM_ADDR_BITS-1:DCACHE_IDX_BITS];
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
     end
- //888888888888888888888888888888888888888888888888888888888888888888888888   
- //////////////////////////////////////////////////////////////////////////
-
 end
 
 // Prepare address and data signals for cache-line writeback or allocate on cache miss 
@@ -197,14 +177,9 @@ always_comb begin
     end
 end
  
- //////////////////////////////////////////////////////////////////////////
-// MT
- //888888888888888888888888888888888888888888888888888888888888888888888888   
+//selection of data and enable, write to data_ram
 assign cache_wdata = write_from_victim_i ? victim2cache_data : cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_line_write : '0;
 assign cache_data_wr_sel = ( write_from_victim_i || cache_line_wr_i) ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
- //888888888888888888888888888888888888888888888888888888888888888888888888   
- //////////////////////////////////////////////////////////////////////////
-
 
 always_ff@(posedge clk) begin
    if(!rst_n) begin
@@ -246,25 +221,19 @@ dcache_tag_ram dcache_tag_ram_module (
     .rdata                (cache_tag_read)  
 );
 
- //////////////////////////////////////////////////////////////////////////
- //888888888888888888888888888888888888888888888888888888888888888888888888   
 victim_cache victim_cache_module (
     .clk                      (clk),
     .rst                      (rst_n),
     .flush_i                  (dcache_flush),
+
     .cache_to_victim_data     (cache_line_read),
     .cache_to_victim_addr     (cache2victim_addr),
     .write_to_victim_i        (write_to_victim_i),
+
     .victim_to_cache_data     (victim2cache_data),
     .victim_to_cache_addr     (victim2cache_addr),
     .victim_hit_o             (victim_hit_o)
 );
- //888888888888888888888888888888888888888888888888888888888888888888888888   
- //////////////////////////////////////////////////////////////////////////
-
-
-// Output signals update
-assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 
 
 assign cache_hit_o          = (addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0]) && cache_tag_read.valid;
 // always_comb begin 
@@ -284,21 +253,13 @@ assign cache_hit_o          = (addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS
 assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid;
 assign dcache2mem_addr_o    = dcache2mem_addr;
 assign dcache2mem_data_o    = cache_line_read;
+assign dcache_valid_o       = cache_tag_read.valid;  // data in dcache is valid or not, for write in victim cache  
 
-
-////////////////////////////////////////////////////////////////////////
-//8888888888888888888888888888888888888888888888888888888888888888888888
-// data goes to lsu
-// assign dcache2lsummu_data_o = dcache2lsummu_data_next;
-
-// goes to controller for control victim cache
-// assign dcache2lsummu_data_o = lsu_victim_mux_sel_i ? victim2cache_data : dcache2lsummu_data_next;
-
-assign dcache_valid_o = cache_tag_read.valid;  // data in dcache is valid or not, for write in victim cache  
+// Output signals update
+assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 
 
 always_comb begin
-
-    if (lsu_victim_mux_sel_i) begin
+    if (lsu_victim_mux_sel_i) begin         // if output data comes from victim
         if (addr_offset_ff == 2'b00) begin
             dcache2lsummu_data_o = victim2cache_data[31:0];
         end
@@ -318,7 +279,5 @@ always_comb begin
     end
 
 end
-//8888888888888888888888888888888888888888888888888888888888888888888888
-////////////////////////////////////////////////////////////////////////
 
 endmodule
