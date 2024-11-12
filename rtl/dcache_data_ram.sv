@@ -8,7 +8,11 @@
 // Date: 11.6.2023
 
 
-parameter int DCACHE_NO_OF_SETS = 32; //2048;
+`ifndef VERILATOR
+`include "../../defines/cache_defs.svh"
+`else
+`include "cache_defs.svh"
+`endif
 
 module dcache_data_ram
 #(

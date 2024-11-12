@@ -7,7 +7,11 @@
 // Author: Muhammad Tahir, UET Lahore
 // Date: 11.6.2023
 
-parameter int DCACHE_NO_OF_SETS = 32;  //2048;
+`ifndef VERILATOR
+`include "../../defines/cache_defs.svh"
+`else
+`include "cache_defs.svh"
+`endif
 
 module dcache_tag_ram #(
 
@@ -28,7 +32,7 @@ parameter DATA_WIDTH = NUM_COL*COL_WIDTH          // Data Width in bits
 
 
 // Memory
-reg [DATA_WIDTH-1:0]             dcache_tagram[DCACHE_NO_OF_SETS-1:0];
+reg [DATA_WIDTH-1:0]    dcache_tagram   [DCACHE_NO_OF_SETS-1:0];
 
 generate
 genvar i;
@@ -45,6 +49,19 @@ genvar i;
          //   end
         end
     end
+endgenerate
+
+// make valid 0 at reset
+generate
+genvar j;
+
+for (j=0; j<DCACHE_NO_OF_SETS; j++) begin
+    always_ff @(negedge rst_n) begin
+
+        dcache_tagram[j][23] <= 1'b0;
+
+    end
+end
 endgenerate
 
 
