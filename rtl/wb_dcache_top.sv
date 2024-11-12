@@ -9,7 +9,12 @@
 
 // `timescale 1 ns / 100 ps
 
-`include "../defines/cache_defs.svh"
+`ifndef VERILATOR
+`include "../../defines/cache_defs.svh"
+`else
+`include "cache_defs.svh"
+`endif
+
 
 module wb_dcache_top (
     input wire                         clk,
