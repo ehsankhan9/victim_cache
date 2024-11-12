@@ -7,15 +7,9 @@
 // Author: Muhammad Ehsan, Muhammad Mujtaba Rawn, Moazzam Ali
 // Date: 08.10.2024
 
-// `include "../defines/cache_defs.svh"
-
-// parameter VICTIM_NO_OF_SETS = 4;
-// parameter VICTIM_COUNTER_BITS = $clog2(VICTIM_NO_OF_SETS);
-// parameter DCACHE_LINE_WIDTH = 128; 
-// parameter VICTIM_ADDR_BITS = 28;   //VICTIM_ADDR_BITS = DCACHE_ADDR_WIDTH - DCACHE_OFFSET_BITS;
 
 `ifndef VERILATOR
-`include "../defines/cache_defs.svh"
+`include "../../defines/cache_defs.svh"
 `else
 `include "cache_defs.svh"
 `endif
@@ -47,8 +41,8 @@ logic [VICTIM_NO_OF_SETS-1:0]   valid;
 
 always_ff @(posedge clk or negedge rst) begin 
     if (!rst || flush_i) begin
-        write_counter  <= 2'b00;
-        valid          <= 4'b0000;
+        write_counter  <= '0;
+        valid          <= '0;
     end
     else if (write_to_victim_i) begin
         if ((cache_to_victim_addr == victim_cache_addr[0]) && valid[0]) begin

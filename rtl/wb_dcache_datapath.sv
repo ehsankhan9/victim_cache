@@ -8,7 +8,7 @@
 // Date: 11.6.2023
 
 `ifndef VERILATOR
-`include "../defines/cache_defs.svh"
+`include "../../defines/cache_defs.svh"
 `else
 `include "cache_defs.svh"
 `endif
