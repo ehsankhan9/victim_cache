@@ -43,16 +43,15 @@ module wb_dcache_controller (
     output logic                          dcache2mem_kill_o,
     input wire                            dmem_sel_i,
 
-    //victim cache to/from dcache
+    //victim cache to dcache interface
     input  logic                          dcache_valid_i,
     input  logic                          victim_hit_i,
-    output logic                          write_from_victim_o,
+    output logic                          victim2dcache_wr_en_o,
     output logic                          write_to_victim_o,
     output logic                          lsu_victim_mux_sel_o 
 
 );
          
-
 type_dcache_states_e                  dcache_state_ff, dcache_state_next;
 logic [DCACHE_IDX_BITS-1:0]           evict_index_next, evict_index_ff;
 
@@ -97,22 +96,21 @@ always_ff @(posedge clk) begin
       evict_index_ff  <= evict_index_next;
   end
 end
-
  
 always_comb begin
-    dcache_state_next = dcache_state_ff;
-    evict_index_next  = evict_index_ff;
-    dcache2lsummu_ack = 1'b0;
-    dcache2mem_req    = 1'b0;
-    dcache2mem_wr     = 1'b0;
-    cache_wrb_req     = 1'b0;
-    cache_line_wr     = 1'b0;
-    cache_line_clean  = 1'b0;
-    cache_wr          = 1'b0;
-    dcache2mem_kill   = 1'b0;
-    write_from_victim_o  = 1'b0;
-    write_to_victim_o    = 1'b0;
-    lsu_victim_mux_sel_o = 1'b0;
+    dcache_state_next      = dcache_state_ff;
+    evict_index_next       = evict_index_ff;
+    dcache2lsummu_ack      = 1'b0;
+    dcache2mem_req         = 1'b0;
+    dcache2mem_wr          = 1'b0;
+    cache_wrb_req          = 1'b0;
+    cache_line_wr          = 1'b0;
+    cache_line_clean       = 1'b0;
+    cache_wr               = 1'b0;
+    dcache2mem_kill        = 1'b0;
+    victim2dcache_wr_en_o  = 1'b0;
+    write_to_victim_o      = 1'b0;
+    lsu_victim_mux_sel_o   = 1'b0;
     
     unique case (dcache_state_ff)
         DCACHE_IDLE: begin
@@ -153,14 +151,14 @@ always_comb begin
                     end 
 
                     else begin
-                        write_from_victim_o = 1'b1;
+                        victim2dcache_wr_en_o = 1'b1;
                         dcache_state_next = DCACHE_VICTIM;                                    
                     end
                 end
 
                 else if (!lsummu2dcache_wr_ff) begin
                     lsu_victim_mux_sel_o = 1'b1;
-                    write_from_victim_o  = 1'b0;
+                    victim2dcache_wr_en_o  = 1'b0;
                     dcache2lsummu_ack    = 1'b1;  
                     dcache_state_next    = DCACHE_IDLE;                
                 end
@@ -227,7 +225,7 @@ always_comb begin
                     cache_line_clean    = 1'b1;
                     
                     // dcache_state_next = DCACHE_VICTIM; 
-                    // write_from_victim_o = 1'b1;
+                    // victim2dcache_wr_en_o = 1'b1;
 
                 end else begin
                     dcache_state_next = DCACHE_ALLOCATE;

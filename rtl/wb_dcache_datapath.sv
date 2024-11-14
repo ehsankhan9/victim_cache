@@ -42,9 +42,9 @@ module wb_dcache_datapath(
     //victim cache to/from dcache
     output logic                          victim_hit_o,      
     output logic                          dcache_valid_o, 
-    input  logic                          write_from_victim_i,
-    input  logic                          write_to_victim_i,
-    input  logic                          lsu_victim_mux_sel_i
+    input  logic                          victim2dcache_wr_en_i,
+    input  logic                          victim_wr_en_i,
+    input  logic                          dcache_victim_sel_i
 );
 
 type_dcache_data_s                   cache_line_read, cache_line_write, cache_wdata;
@@ -79,9 +79,8 @@ assign addr_offset          = lsummu2dcache_addr_i[DCACHE_OFFSET_BITS-1:2];
 assign addr_index           = dcache_flush ? evict_index : cache_wr_i ? addr_index_ff :
                               lsummu2dcache_addr_i[DCACHE_TAG_LSB-1:DCACHE_OFFSET_BITS];
 
-assign cache2victim_addr    = write_to_victim_i ? {cache_tag_read.tag[DCACHE_TAG_BITS-1:0],addr_index}:
-                                lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
-
+assign cache2victim_addr    = victim_wr_en_i ? {cache_tag_read.tag[DCACHE_TAG_BITS-1:0],addr_index}:
+                              lsummu2dcache_addr_i[DCACHE_ADDR_WIDTH-1:DCACHE_OFFSET_BITS];
 
 always_ff@(posedge clk) begin
    if(!rst_n) begin
@@ -100,7 +99,6 @@ always_ff@(posedge clk) begin
         addr_offset_ff <= addr_offset; // MT
     end
 end
-
 
 always_comb begin
     unique case (addr_offset_ff) // MT
@@ -160,7 +158,7 @@ cache_tag_wr_sel = '0;
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
         cache_tag_wr_sel      = 4'hF;
-    end else if (write_from_victim_i) begin
+    end else if (victim2dcache_wr_en_i) begin
         cache_tag_write.tag   = victim2cache_addr[VICTIM_ADDR_BITS-1:DCACHE_IDX_BITS];
         cache_tag_write.valid = 1'b1;
         cache_tag_write.dirty = 8'b0;
@@ -178,8 +176,8 @@ always_comb begin
 end
  
 //selection of data and enable, write to data_ram
-assign cache_wdata = write_from_victim_i ? victim2cache_data : cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_line_write : '0;
-assign cache_data_wr_sel = ( write_from_victim_i || cache_line_wr_i) ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
+assign cache_wdata = victim2dcache_wr_en_i ? victim2cache_data : cache_line_wr_i ? mem2dcache_data_i : cache_wr_i ? cache_line_write : '0;
+assign cache_data_wr_sel = ( victim2dcache_wr_en_i || cache_line_wr_i) ? 16'hFFFF : cache_wr_i ? cache_line_sel_byte : '0;
 
 always_ff@(posedge clk) begin
    if(!rst_n) begin
@@ -226,29 +224,16 @@ victim_cache victim_cache_module (
     .rst                      (rst_n),
     .flush_i                  (dcache_flush),
 
-    .cache_to_victim_data     (cache_line_read),
-    .cache_to_victim_addr     (cache2victim_addr),
-    .write_to_victim_i        (write_to_victim_i),
+    .dcache2victim_data_i     (cache_line_read),
+    .dcache2victim_addr_i     (cache2victim_addr),
+    .victim_wr_en_i           (victim_wr_en_i),
 
-    .victim_to_cache_data     (victim2cache_data),
-    .victim_to_cache_addr     (victim2cache_addr),
+    .victim2dcache_data_o     (victim2cache_data),
+    .victim2dcache_addr_o     (victim2cache_addr),
     .victim_hit_o             (victim_hit_o)
 );
 
 assign cache_hit_o          = (addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0]) && cache_tag_read.valid;
-// always_comb begin 
-    // if (cache_tag_read.valid) begin
-        // if ((addr_tag_ff == cache_tag_read.tag[DCACHE_TAG_BITS-1:0])) begin
-            // cache_hit_o = 1;
-        // end
-        // else begin
-            // cache_hit_o = 0;
-        // end
-    // end
-    // else begin
-        // cache_hit_o = 0;
-    // end
-// end
 
 assign cache_evict_req_o    = cache_tag_read.dirty[0]; // & cache_tag_read.valid;
 assign dcache2mem_addr_o    = dcache2mem_addr;
@@ -258,8 +243,9 @@ assign dcache_valid_o       = cache_tag_read.valid;  // data in dcache is valid 
 // Output signals update
 assign dcache2lsummu_data_next = cache_word_read;   // Read data from cache to LSU/MMU 
 
+// data comes from main cache or victim cache  
 always_comb begin
-    if (lsu_victim_mux_sel_i) begin         // if output data comes from victim
+    if (dcache_victim_sel_i) begin         
         if (addr_offset_ff == 2'b00) begin
             dcache2lsummu_data_o = victim2cache_data[31:0];
         end
