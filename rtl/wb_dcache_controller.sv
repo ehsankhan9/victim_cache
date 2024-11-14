@@ -47,8 +47,8 @@ module wb_dcache_controller (
     input  logic                          dcache_valid_i,
     input  logic                          victim_hit_i,
     output logic                          victim2dcache_wr_en_o,
-    output logic                          write_to_victim_o,
-    output logic                          lsu_victim_mux_sel_o 
+    output logic                          victim_wr_en_o,
+    output logic                          dcache_victim_sel_o 
 
 );
          
@@ -109,8 +109,8 @@ always_comb begin
     cache_wr               = 1'b0;
     dcache2mem_kill        = 1'b0;
     victim2dcache_wr_en_o  = 1'b0;
-    write_to_victim_o      = 1'b0;
-    lsu_victim_mux_sel_o   = 1'b0;
+    victim_wr_en_o      = 1'b0;
+    dcache_victim_sel_o   = 1'b0;
     
     unique case (dcache_state_ff)
         DCACHE_IDLE: begin
@@ -142,7 +142,7 @@ always_comb begin
                 if (lsummu2dcache_wr_ff) begin
                     if (dcache_evict && dcache_valid_i && !dcache_hit) begin
 
-                        write_to_victim_o   = 1'b1;                    
+                        victim_wr_en_o   = 1'b1;                    
                         dcache2mem_req    = 1'b1;
                         dcache2mem_wr     = 1'b1;
                         cache_wrb_req     = 1'b1;
@@ -157,7 +157,7 @@ always_comb begin
                 end
 
                 else if (!lsummu2dcache_wr_ff) begin
-                    lsu_victim_mux_sel_o = 1'b1;
+                    dcache_victim_sel_o = 1'b1;
                     victim2dcache_wr_en_o  = 1'b0;
                     dcache2lsummu_ack    = 1'b1;  
                     dcache_state_next    = DCACHE_IDLE;                
@@ -168,10 +168,10 @@ always_comb begin
             else begin           
                 if (dcache_evict) begin
                     if (dcache_valid_i) begin
-                        write_to_victim_o   = 1'b1;
+                        victim_wr_en_o   = 1'b1;
                     end
                     else begin
-                        write_to_victim_o   = 1'b0;
+                        victim_wr_en_o   = 1'b0;
                     end
                     dcache_state_next = DCACHE_WRITE_BACK;
                     dcache2mem_req    = 1'b1;
@@ -180,10 +180,10 @@ always_comb begin
                 end 
                 else begin 
                     if (dcache_valid_i) begin
-                        write_to_victim_o   = 1'b1;
+                        victim_wr_en_o   = 1'b1;
                     end
                     else begin
-                      write_to_victim_o   = 1'b0;
+                      victim_wr_en_o   = 1'b0;
                     end
                     dcache_state_next = DCACHE_ALLOCATE;
                     dcache2mem_req    = 1'b1;

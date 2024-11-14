@@ -30,7 +30,7 @@ module victim_cache (
 //////////////    VICTIM_CACHE      /////////////// 
 
 logic [DCACHE_LINE_WIDTH-1  : 0] victim_cache_data [VICTIM_NO_OF_SETS-1:0];
-logic [VICTIM_ADDR_BITS-1   : 0] victim_cache_tag  [VICTIM_NO_OF_SETS-1:0];
+logic [VICTIM_ADDR_BITS-1   : 0] victim_cache_addr  [VICTIM_NO_OF_SETS-1:0];
 
 ///////////////////////////////////////////////////
 
@@ -43,22 +43,22 @@ always_ff @(posedge clk or negedge rst) begin
         valid          <= '0;
     end
     else if (victim_wr_en_i) begin
-        if ((dcache2victim_addr_i == victim_cache_tag[0]) && valid[0]) begin
+        if ((dcache2victim_addr_i == victim_cache_addr[0]) && valid[0]) begin
             victim_cache_data[0]  <= dcache2victim_data_i;
         end 
-        else if ((dcache2victim_addr_i == victim_cache_tag[1]) && valid[1]) begin
+        else if ((dcache2victim_addr_i == victim_cache_addr[1]) && valid[1]) begin
             victim_cache_data[1]  <= dcache2victim_data_i;
         end
-        else if ((dcache2victim_addr_i == victim_cache_tag[2]) && valid[2]) begin
+        else if ((dcache2victim_addr_i == victim_cache_addr[2]) && valid[2]) begin
             victim_cache_data[2]  <= dcache2victim_data_i;
         end
-        else if ((dcache2victim_addr_i == victim_cache_tag[3]) && valid[3]) begin
+        else if ((dcache2victim_addr_i == victim_cache_addr[3]) && valid[3]) begin
             victim_cache_data[3]  <= dcache2victim_data_i;
         end
         else begin
             valid[write_counter]              <= 1'b1;
             victim_cache_data[write_counter]  <= dcache2victim_data_i;
-            victim_cache_tag [write_counter] <= dcache2victim_addr_i;
+            victim_cache_addr [write_counter] <= dcache2victim_addr_i;
             write_counter                     <= write_counter + 1'b1;            
         end
     end
@@ -66,37 +66,37 @@ end
 
 
 always_comb begin
-    if (!write_to_victim_i) begin
-        if (valid[0] && (cache_to_victim_addr == victim_cache_addr[0])) begin
-            victim_to_cache_data  =  victim_cache_data[0];
-            victim_to_cache_addr  =  victim_cache_addr[0];
+    if (!victim_wr_en_i) begin
+        if (valid[0] && (dcache2victim_addr_i == victim_cache_addr[0])) begin
+            victim2dcache_data_o  =  victim_cache_data[0];
+            victim2dcache_addr_o  =  victim_cache_addr[0];
             victim_hit_o = 1'b1;
         end 
-        else if (valid[1] && (cache_to_victim_addr == victim_cache_addr[1])) begin
-            victim_to_cache_data  =  victim_cache_data[1];
-            victim_to_cache_addr  =  victim_cache_addr[1];
+        else if (valid[1] && (dcache2victim_addr_i == victim_cache_addr[1])) begin
+            victim2dcache_data_o  =  victim_cache_data[1];
+            victim2dcache_addr_o  =  victim_cache_addr[1];
             victim_hit_o = 1'b1;
         end
-        else if (valid[2] && (cache_to_victim_addr == victim_cache_addr[2])) begin
-            victim_to_cache_data  =  victim_cache_data[2];
-            victim_to_cache_addr  =  victim_cache_addr[2];
+        else if (valid[2] && (dcache2victim_addr_i == victim_cache_addr[2])) begin
+            victim2dcache_data_o  =  victim_cache_data[2];
+            victim2dcache_addr_o  =  victim_cache_addr[2];
             victim_hit_o = 1'b1;
         end
-        else if (valid[3] && (cache_to_victim_addr == victim_cache_addr[3])) begin
-            victim_to_cache_data  =  victim_cache_data[3];
-            victim_to_cache_addr  =  victim_cache_addr[3];
+        else if (valid[3] && (dcache2victim_addr_i == victim_cache_addr[3])) begin
+            victim2dcache_data_o  =  victim_cache_data[3];
+            victim2dcache_addr_o  =  victim_cache_addr[3];
             victim_hit_o = 1'b1;
         end
         else  begin
-        victim_to_cache_data = '0;
-        victim_to_cache_addr = '0;
+        victim2dcache_data_o = '0;
+        victim2dcache_addr_o = '0;
         victim_hit_o = 1'b0;
         end
 end
 
     else  begin
-        victim_to_cache_data = '0;
-        victim_to_cache_addr = '0;
+        victim2dcache_data_o = '0;
+        victim2dcache_addr_o = '0;
         victim_hit_o = 1'b0;
     end
 end

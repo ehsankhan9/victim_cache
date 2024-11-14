@@ -50,9 +50,9 @@ type_dcache2mem_s                  dcache2mem;
 //victim cache signals
 logic                             dcache_valid;
 logic                             victim_hit;
-logic                             write_from_victim;
-logic                             write_to_victim;
-logic                             lsu_victim_mux_sel;
+logic                             victim2dcache_wr_en;
+logic                             victim_wr_en;
+logic                             dcache_victim_sel;
 
 assign lsummu2dcache = lsummu2dcache_i;
 assign mem2dcache    = mem2dcache_i;
@@ -86,9 +86,9 @@ wb_dcache_controller wb_dcache_controller_module(
   .dmem_sel_i              (dmem_sel_i),
 
   //victim cache to/from dcache
-  .write_to_victim_o       (write_to_victim),
-  .write_from_victim_o     (write_from_victim),
-  .lsu_victim_mux_sel_o    (lsu_victim_mux_sel),
+  .victim_wr_en_o          (victim_wr_en),
+  .victim2dcache_wr_en_o   (victim2dcache_wr_en),
+  .dcache_victim_sel_o     (dcache_victim_sel),
   .victim_hit_i            (victim_hit),
   .dcache_valid_i          (dcache_valid)
 );  
@@ -122,9 +122,9 @@ wb_dcache_datapath wb_dcache_datapath_module(
   //victim cache to/from dcache
   .victim_hit_o            (victim_hit),
   .dcache_valid_o          (dcache_valid),
-  .write_to_victim_i       (write_to_victim),
-  .write_from_victim_i     (write_from_victim),
-  .lsu_victim_mux_sel_i    (lsu_victim_mux_sel)
+  .victim_wr_en_i          (victim_wr_en),
+  .victim2dcache_wr_en_i   (victim2dcache_wr_en),
+  .dcache_victim_sel_i     (dcache_victim_sel)
 );
 
 assign dcache2lsummu_o = dcache2lsummu;
