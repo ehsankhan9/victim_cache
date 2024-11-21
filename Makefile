@@ -9,7 +9,7 @@ all: compile run
 
 # Compile source files
 compile:
-	python3 src/code_ok.py
+	python3 src/victim_seq.py
 	@mkdir -p log
 	vlib $(WORK_DIR)
 	vlog -work $(WORK_DIR) $(SRC_FILES)
