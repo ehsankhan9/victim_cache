@@ -38,7 +38,7 @@ with open("rtl/victim_cache.sv", "w") as file:
 //
 // Description: The Victim-Cache for data cache. 
 //
-// Author: Muhammad Ehsan,  Moazzam Ali, Muhammad Mujtaba Rawn
+// Author: Muhammad Ehsan, Moazzam Ali, Muhammad Mujtaba Rawn
 // Date: 08.10.2024
 
 
@@ -53,13 +53,13 @@ module victim_cache (
     input logic                            rst,
     input logic                            flush_i,
 
-    input logic [DCACHE_LINE_WIDTH-1 : 0]  dcache2victim_data_i,   //input_data
-    input logic [VICTIM_ADDR_BITS-1  : 0]  dcache2victim_addr_w_i,   //input_tag + index
-    input logic [VICTIM_ADDR_BITS-1  : 0]  dcache2victim_addr_r_i,   //input_tag + index
+    input logic [DCACHE_LINE_WIDTH-1 : 0]  dcache2victim_data_i,    //input_data
+    input logic [VICTIM_ADDR_BITS-1  : 0]  dcache2victim_addr_w_i,  //input_tag + index
+    input logic [VICTIM_ADDR_BITS-1  : 0]  dcache2victim_addr_r_i,  //input_tag + index
     input logic                            victim_wr_en_i,
 
-    output logic [DCACHE_LINE_WIDTH-1 : 0] victim2dcache_data_o,   //output_data
-    output logic [VICTIM_ADDR_BITS-1  : 0] victim2dcache_addr_o ,  //output_tag + index
+    output logic [DCACHE_LINE_WIDTH-1 : 0] victim2dcache_data_o,    //output_data
+    output logic [VICTIM_ADDR_BITS-1  : 0] victim2dcache_addr_o ,   //output_tag + index
     output logic                           victim_hit_o
 );
 
@@ -67,6 +67,7 @@ module victim_cache (
 
 logic [DCACHE_LINE_WIDTH-1  : 0] victim_cache_data   [VICTIM_NO_OF_SETS-1:0];
 logic [VICTIM_ADDR_BITS-1   : 0] victim_cache_addr   [VICTIM_NO_OF_SETS-1:0];
+
 ///////////////////////////////////////////////////
 
 logic [VICTIM_COUNTER_BITS-1:0] write_counter;
@@ -96,7 +97,8 @@ always_ff @(posedge clk or negedge rst) begin
         end
     end
 end\n""")
-    file.write("""always_ff @(posedge clk) begin
+
+    file.write("""\nalways_ff @(posedge clk) begin
     if (valid[0] && (dcache2victim_addr_r_i == victim_cache_addr[0])) begin
         victim2dcache_data_o <= victim_cache_data[0];
         victim2dcache_addr_o <= victim_cache_addr[0];
